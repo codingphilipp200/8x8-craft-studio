@@ -1486,7 +1486,7 @@
     </aside>
 
     <!-- Start / Pack Loader Modal -->
-    <div class="modal-backdrop" id="packModal">
+    <div class="modal-backdrop hidden" id="packModal">
       <div class="modal-dialog">
         <div class="modal-header">
           <div>
@@ -2421,28 +2421,18 @@
 
     async function persistStateToIndexedDB() {
       try {
-        const serializedWorklist = state.worklist.map(w => ({
-          relPath: w.relPath,
-          fileName: w.fileName,
-          category: w.category,
-          status: w.status,
-          vanillaDataUrl: w.vanillaDataUrl,
-          drawnPixels: w.drawnPixels ? Array.from(w.drawnPixels) : null
-        }));
-
-        const serialized116 = [];
-        for (const [k, v] of state.textures116.entries()) {
-          serialized116.push({
-            relPath: k,
-            name: v.name,
-            category: v.category,
-            dataUrl: v.dataUrl,
-            palette: v.palette,
-            pixels8x8: Array.from(v.pixels8x8)
-          });
+        // Save lightweight user progress (drawn pixels + status) and raw ZIP buffers
+        const userProgress = {};
+        for (const w of state.worklist) {
+          if (w.status !== 'pending' || w.drawnPixels) {
+            userProgress[w.relPath] = {
+              status: w.status,
+              drawnPixels: w.drawnPixels ? Array.from(w.drawnPixels) : null
+            };
+          }
         }
 
-        await StorageDB.set('project_snapshot', {
+        await StorageDB.set('user_progress_v2', {
           pack116Name: state.pack116Name,
           pack263Name: state.pack263Name,
           currentWorkIndex: state.currentWorkIndex,
@@ -2451,77 +2441,64 @@
           filterCategory: state.filterCategory,
           filterStatus: state.filterStatus,
           showGrid: state.showGrid,
-          worklist: serializedWorklist,
-          textures116: serialized116
+          items: userProgress
         });
 
         if (state.pack116Buffer) {
           await StorageDB.set('pack116_buffer', state.pack116Buffer);
+        }
+        if (state.pack263Buffer) {
+          await StorageDB.set('pack263_buffer', state.pack263Buffer);
         }
       } catch (err) {
         console.warn('IndexedDB Save Error:', err);
       }
     }
 
+    async function applySavedUserProgress(progressSnap) {
+      if (!progressSnap) return;
+      state.currentWorkIndex = progressSnap.currentWorkIndex || 0;
+      state.activeColor = progressSnap.activeColor || '#D97757';
+      state.recentColors = progressSnap.recentColors || state.recentColors;
+      state.filterCategory = progressSnap.filterCategory || 'all';
+      state.filterStatus = progressSnap.filterStatus || 'all';
+      state.showGrid = progressSnap.showGrid !== undefined ? progressSnap.showGrid : true;
+
+      dom.categoryFilter.value = state.filterCategory;
+      dom.statusFilter.value = state.filterStatus;
+      dom.pixelGridOverlay.classList.toggle('hidden', !state.showGrid);
+      dom.btnToggleGrid.textContent = state.showGrid ? 'Raster: An' : 'Raster: Aus';
+
+      const itemsMap = progressSnap.items || {};
+      for (const w of state.worklist) {
+        const saved = itemsMap[w.relPath];
+        if (saved) {
+          w.status = saved.status || 'pending';
+          w.drawnPixels = saved.drawnPixels ? new Uint8ClampedArray(saved.drawnPixels) : null;
+        }
+      }
+
+      setActiveColor(state.activeColor, false);
+      recomputeFilteredWorklist();
+      await loadWorkItem(state.currentWorkIndex);
+    }
+
     async function restoreFromIndexedDB() {
       try {
-        const snap = await StorageDB.get('project_snapshot');
+        const progressSnap = await StorageDB.get('user_progress_v2');
         const buf116 = await StorageDB.get('pack116_buffer');
-        if (!snap || !snap.worklist || snap.worklist.length === 0) {
+        const buf263 = await StorageDB.get('pack263_buffer');
+
+        // Ignore demo snapshots so real repo packs always take priority
+        if (!progressSnap || progressSnap.pack116Name === 'Rodrigo_1.16.5_Demo.zip' || !buf116 || !buf263) {
           return false;
         }
 
-        state.pack116Buffer = buf116 || null;
-        state.pack116Name = snap.pack116Name || null;
-        state.pack263Name = snap.pack263Name || null;
-        state.currentWorkIndex = snap.currentWorkIndex || 0;
-        state.activeColor = snap.activeColor || '#D97757';
-        state.recentColors = snap.recentColors || state.recentColors;
-        state.filterCategory = snap.filterCategory || 'all';
-        state.filterStatus = snap.filterStatus || 'all';
-        state.showGrid = snap.showGrid !== undefined ? snap.showGrid : true;
-
-        dom.categoryFilter.value = state.filterCategory;
-        dom.statusFilter.value = state.filterStatus;
-        dom.pixelGridOverlay.classList.toggle('hidden', !state.showGrid);
-        dom.btnToggleGrid.textContent = state.showGrid ? 'Raster: An' : 'Raster: Aus';
-
-        state.textures116.clear();
-        if (Array.isArray(snap.textures116)) {
-          for (const t of snap.textures116) {
-            state.textures116.set(t.relPath, {
-              relPath: t.relPath,
-              name: t.name,
-              category: t.category,
-              dataUrl: t.dataUrl,
-              palette: t.palette || [],
-              pixels8x8: new Uint8ClampedArray(t.pixels8x8)
-            });
-          }
-        }
-
-        state.worklist = snap.worklist.map(w => ({
-          relPath: w.relPath,
-          fileName: w.fileName,
-          category: w.category,
-          status: w.status || 'pending',
-          vanillaDataUrl: w.vanillaDataUrl,
-          drawnPixels: w.drawnPixels ? new Uint8ClampedArray(w.drawnPixels) : null
-        }));
-
-        if (state.pack116Name) {
-          dom.slotPack116.classList.add('loaded');
-          dom.statusPack116.textContent = `${state.pack116Name} (${state.textures116.size} Texturen)`;
-        }
-        if (state.pack263Name) {
-          dom.slotPack263.classList.add('loaded');
-          dom.statusPack263.textContent = `${state.pack263Name} (${state.worklist.length} Diffs)`;
-        }
-
-        setActiveColor(state.activeColor, false);
-        recomputeFilteredWorklist();
-        await loadWorkItem(state.currentWorkIndex);
-        return true;
+        await loadPack116FromBuffer(buf116, progressSnap.pack116Name || 'pack-1.16.zip', false);
+        await loadPack263FromBuffer(buf263, progressSnap.pack263Name || 'textures-26.3.zip', false);
+        await checkAndBuildDiff(false);
+        await applySavedUserProgress(progressSnap);
+        return state.worklist.length > 0;
       } catch (err) {
         console.warn('IndexedDB Restore Error:', err);
         return false;
@@ -2558,23 +2535,66 @@
       dom.progressBarFill.style.width = `${total > 0 ? (doneCount / total) * 100 : 0}%`;
     }
 
+    async function ensureWorkItemVanillaUrl(item) {
+      if (item.vanillaDataUrl) return item.vanillaDataUrl;
+      if (item.rawEntry) {
+        try {
+          const bytes = await ZipEngine.extractEntryBytes(item.rawEntry);
+          item.vanillaDataUrl = bytesToDataUrlPng(bytes);
+          return item.vanillaDataUrl;
+        } catch (e) {
+          console.warn('Error extracting vanilla entry:', item.relPath, e);
+        }
+      }
+      return '';
+    }
+
+    async function ensureTexture116Decoded(texObj) {
+      if (texObj.pixels8x8 && texObj.palette && texObj.dataUrl) return texObj;
+      if (texObj.rawEntry) {
+        const bytes = await ZipEngine.extractEntryBytes(texObj.rawEntry);
+        texObj.dataUrl = bytesToDataUrlPng(bytes);
+      }
+      if (texObj.dataUrl && (!texObj.pixels8x8 || !texObj.palette)) {
+        const { pixels8x8, palette } = await extract8x8AndPaletteFromDataUrl(texObj.dataUrl);
+        texObj.pixels8x8 = pixels8x8;
+        texObj.palette = palette;
+      }
+      return texObj;
+    }
+
     function renderQueueDrawer() {
       dom.drawerSubCount.textContent = `${state.filteredIndices.length} von ${state.worklist.length} Texturen`;
       dom.queueListContainer.innerHTML = '';
 
-      const maxRender = Math.min(state.filteredIndices.length, 250);
+      const maxRender = Math.min(state.filteredIndices.length, 150);
       for (let i = 0; i < maxRender; i++) {
         const workIdx = state.filteredIndices[i];
         const item = state.worklist[workIdx];
         const row = document.createElement('button');
         row.className = 'queue-row' + (workIdx === state.currentWorkIndex ? ' active' : '');
-        row.innerHTML = `
-          <div class="queue-row-left">
-            <img class="queue-row-thumb pixelated checkerboard" src="${item.vanillaDataUrl}" alt="" />
-            <span class="queue-row-name mono">${item.relPath}</span>
-          </div>
-          <span class="queue-dot ${item.status}"></span>
-        `;
+        const imgEl = document.createElement('img');
+        imgEl.className = 'queue-row-thumb pixelated checkerboard';
+        imgEl.alt = '';
+        if (item.vanillaDataUrl) {
+          imgEl.src = item.vanillaDataUrl;
+        } else {
+          ensureWorkItemVanillaUrl(item).then(url => { if (url) imgEl.src = url; });
+        }
+
+        const leftDiv = document.createElement('div');
+        leftDiv.className = 'queue-row-left';
+        const nameSpan = document.createElement('span');
+        nameSpan.className = 'queue-row-name mono';
+        nameSpan.textContent = item.relPath;
+        leftDiv.appendChild(imgEl);
+        leftDiv.appendChild(nameSpan);
+
+        const dotSpan = document.createElement('span');
+        dotSpan.className = `queue-dot ${item.status}`;
+
+        row.appendChild(leftDiv);
+        row.appendChild(dotSpan);
         row.addEventListener('click', () => {
           loadWorkItem(workIdx);
           dom.queueDrawer.classList.remove('open');
@@ -2596,10 +2616,11 @@
       dom.currentStatusBadge.textContent = statusLabels[item.status] || 'Offen';
       dom.currentStatusBadge.className = 'status-badge mono ' + (item.status === 'done' ? 'done' : item.status === 'skipped' ? 'skipped' : '');
 
-      // Load Vanilla Reference onto refCanvas
-      if (item.vanillaDataUrl) {
+      // Load Vanilla Reference onto refCanvas (decode lazily if needed)
+      const vanillaUrl = await ensureWorkItemVanillaUrl(item);
+      if (vanillaUrl) {
         try {
-          const img = await loadImage(item.vanillaDataUrl);
+          const img = await loadImage(vanillaUrl);
           const w = img.naturalWidth || 16;
           const h = img.naturalHeight || 16;
           dom.refCanvas.width = w;
@@ -2621,12 +2642,12 @@
       }
 
       renderAllPreviews();
-      renderInspirationBar();
+      await renderInspirationBar();
       renderQueueDrawer();
       persistStateToIndexedDB();
     }
 
-    function renderInspirationBar() {
+    async function renderInspirationBar() {
       const currentItem = state.worklist[state.currentWorkIndex];
       const matches = getInspirationMatches(currentItem ? currentItem.relPath : '', state.inspSearchQuery);
       dom.inspirationList.innerHTML = '';
@@ -2640,6 +2661,9 @@
         return;
       }
 
+      // Lazily decode only the matched inspiration textures (typically 6 textures)
+      await Promise.all(matches.map(m => ensureTexture116Decoded(m)));
+
       if (!state.selectedInspirationPath || !matches.some(m => m.relPath === state.selectedInspirationPath)) {
         state.selectedInspirationPath = matches[0].relPath;
         if (matches[0].palette && matches[0].palette.length > 0) {
@@ -2652,11 +2676,12 @@
         const el = document.createElement('div');
         el.className = 'insp-item' + (m.relPath === state.selectedInspirationPath ? ' active' : '');
         const shortName = m.relPath.split('/').pop().replace(/\.png$/i, '');
+        const palLen = m.palette ? m.palette.length : 0;
         el.innerHTML = `
-          <img class="insp-thumb pixelated checkerboard" src="${m.dataUrl}" alt="${shortName}" />
+          <img class="insp-thumb pixelated checkerboard" src="${m.dataUrl || ''}" alt="${shortName}" />
           <div class="insp-meta">
             <span class="insp-name mono">${shortName}</span>
-            <span class="insp-sub mono">${m.category} · ${m.palette.length} Farben</span>
+            <span class="insp-sub mono">${m.category} · ${palLen} Farben</span>
           </div>
         `;
         el.addEventListener('click', () => {
@@ -2920,7 +2945,7 @@
      *************************************************************************/
     let pendingEntries263 = null;
 
-    async function loadPack116FromBuffer(ab, fileName) {
+    async function loadPack116FromBuffer(ab, fileName, triggerDiff = true) {
       dom.statusPack116.textContent = 'Analysiere 1.16.5 ZIP…';
       const entries = await ZipEngine.parseZip(ab);
 
@@ -2935,32 +2960,27 @@
         const cat = getCategoryFromRelPath(relPath);
         if (!CATEGORIES.includes(cat)) continue;
 
-        try {
-          const bytes = await ZipEngine.extractEntryBytes(entry);
-          const dataUrl = bytesToDataUrlPng(bytes);
-          const { pixels8x8, palette } = await extract8x8AndPaletteFromDataUrl(dataUrl);
-          state.textures116.set(relPath, {
-            relPath,
-            name: relPath.split('/').pop(),
-            category: cat,
-            dataUrl,
-            palette,
-            pixels8x8
-          });
-          count++;
-        } catch (innerErr) {
-          // Skip malformed non-standard PNG entry
-        }
+        state.textures116.set(relPath, {
+          relPath,
+          name: relPath.split('/').pop(),
+          category: cat,
+          rawEntry: entry,
+          dataUrl: null,
+          palette: null,
+          pixels8x8: null
+        });
+        count++;
       }
 
       dom.slotPack116.classList.add('loaded');
       dom.statusPack116.textContent = `${fileName} (${count} Texturen)`;
-      await checkAndBuildDiff();
+      if (triggerDiff) await checkAndBuildDiff(true);
     }
 
-    async function loadPack263FromBuffer(ab, fileName) {
+    async function loadPack263FromBuffer(ab, fileName, triggerDiff = true) {
       dom.statusPack263.textContent = 'Analysiere 26.3 ZIP…';
       pendingEntries263 = await ZipEngine.parseZip(ab);
+      state.pack263Buffer = ab;
       state.pack263Name = fileName;
 
       let validPngCount = 0;
@@ -2973,33 +2993,43 @@
 
       dom.slotPack263.classList.add('loaded');
       dom.statusPack263.textContent = `${fileName} (${validPngCount} Ziel-Texturen)`;
-      await checkAndBuildDiff();
+      if (triggerDiff) await checkAndBuildDiff(true);
     }
 
-    // Automatic loading from GitHub Pages repository if pack-1.16.zip & vanilla-26.3.zip are placed next to index.html
+    // Automatic loading from GitHub Pages repository (pack-1.16.zip + textures-26.3.zip or vanilla-26.3.zip)
     async function tryAutoLoadRepoPacks() {
       try {
-        const [res116, res263] = await Promise.all([
-          fetch('./pack-1.16.zip', { cache: 'no-cache' }),
-          fetch('./vanilla-26.3.zip', { cache: 'no-cache' })
-        ]);
+        showToast('Lade Packs automatisch vom GitHub-Repo…');
+        const res116Promise = fetch('./pack-1.16.zip');
+        let res263 = await fetch('./textures-26.3.zip');
+        let name263 = 'textures-26.3.zip';
+        if (!res263.ok) {
+          res263 = await fetch('./vanilla-26.3.zip');
+          name263 = 'vanilla-26.3.zip';
+        }
+        const res116 = await res116Promise;
         if (!res116.ok || !res263.ok) return false;
-
-        showToast('Lade pack-1.16.zip & vanilla-26.3.zip vom Server…');
-        dom.statusPack116.textContent = 'Lade pack-1.16.zip vom Repo…';
-        dom.statusPack263.textContent = 'Lade vanilla-26.3.zip vom Repo…';
 
         const [ab116, ab263] = await Promise.all([
           res116.arrayBuffer(),
           res263.arrayBuffer()
         ]);
 
-        await loadPack116FromBuffer(ab116, 'pack-1.16.zip');
-        await loadPack263FromBuffer(ab263, 'vanilla-26.3.zip');
+        await loadPack116FromBuffer(ab116, 'pack-1.16.zip', false);
+        await loadPack263FromBuffer(ab263, name263, false);
+        await checkAndBuildDiff(true);
+
+        // Also restore any existing user progress if present
+        const savedProgress = await StorageDB.get('user_progress_v2');
+        if (savedProgress && savedProgress.pack116Name !== 'Rodrigo_1.16.5_Demo.zip') {
+          await applySavedUserProgress(savedProgress);
+        }
+
         dom.packModal.classList.add('hidden');
-        showToast('Beide Packs automatisch vom GitHub-Repository geladen!');
+        showToast(`Packs geladen (${state.worklist.length} fehlende Texturen)`);
         return true;
       } catch (e) {
+        console.warn('AutoLoad Repo Packs error:', e);
         return false;
       }
     }
@@ -3009,7 +3039,7 @@
       if (!file) return;
       try {
         const ab = await file.arrayBuffer();
-        await loadPack116FromBuffer(ab, file.name);
+        await loadPack116FromBuffer(ab, file.name, true);
       } catch (err) {
         alert('Fehler beim Lesen des 1.16.5 ZIP-Archivs: ' + err.message);
         dom.statusPack116.textContent = 'Fehler beim Laden';
@@ -3021,14 +3051,14 @@
       if (!file) return;
       try {
         const ab = await file.arrayBuffer();
-        await loadPack263FromBuffer(ab, file.name);
+        await loadPack263FromBuffer(ab, file.name, true);
       } catch (err) {
         alert('Fehler beim Lesen des Vanilla 26.3 ZIP-Archivs: ' + err.message);
         dom.statusPack263.textContent = 'Fehler beim Laden';
       }
     });
 
-    async function checkAndBuildDiff() {
+    async function checkAndBuildDiff(autoLoadFirst = true) {
       if (!pendingEntries263) return;
 
       dom.diffSummaryBox.style.display = 'flex';
@@ -3050,21 +3080,16 @@
           continue;
         }
 
-        try {
-          const bytes = await ZipEngine.extractEntryBytes(entry);
-          const vanillaDataUrl = bytesToDataUrlPng(bytes);
-          newWorklist.push({
-            relPath,
-            fileName: relPath.split('/').pop(),
-            category,
-            status: 'pending',
-            vanillaDataUrl,
-            drawnPixels: null
-          });
-          catCounts[category] = (catCounts[category] || 0) + 1;
-        } catch (e) {
-          // Skip unreadable entry
-        }
+        newWorklist.push({
+          relPath,
+          fileName: relPath.split('/').pop(),
+          category,
+          status: 'pending',
+          rawEntry: entry,
+          vanillaDataUrl: null,
+          drawnPixels: null
+        });
+        catCounts[category] = (catCounts[category] || 0) + 1;
       }
 
       newWorklist.sort((a, b) => a.relPath.localeCompare(b.relPath));
@@ -3081,7 +3106,7 @@
         : 'Keine fehlenden Texturen gefunden!';
 
       recomputeFilteredWorklist();
-      if (state.worklist.length > 0) {
+      if (autoLoadFirst && state.worklist.length > 0) {
         await loadWorkItem(0);
       }
     }
@@ -3504,12 +3529,14 @@
     dom.btnExtractVanillaPalette.addEventListener('click', extractPaletteFromVanillaCanvas);
 
     // Apply Inspiration 8x8 Texture as Base
-    dom.btnApplyInspiration.addEventListener('click', () => {
+    dom.btnApplyInspiration.addEventListener('click', async () => {
       const insp = state.textures116.get(state.selectedInspirationPath);
       if (!insp) {
         showToast('Bitte zuerst eine Inspirations-Textur antippen');
         return;
       }
+      await ensureTexture116Decoded(insp);
+      if (!insp.pixels8x8) return;
       pushUndoSnapshot();
       state.canvasBuffer.set(insp.pixels8x8);
       syncCanvasAndSave();
