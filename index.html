@@ -2920,46 +2920,96 @@
      *************************************************************************/
     let pendingEntries263 = null;
 
+    async function loadPack116FromBuffer(ab, fileName) {
+      dom.statusPack116.textContent = 'Analysiere 1.16.5 ZIP…';
+      const entries = await ZipEngine.parseZip(ab);
+
+      state.pack116Buffer = ab;
+      state.pack116Name = fileName;
+      state.textures116.clear();
+
+      let count = 0;
+      for (const [path, entry] of entries.entries()) {
+        const relPath = normalizeTexturePath(path);
+        if (!relPath) continue;
+        const cat = getCategoryFromRelPath(relPath);
+        if (!CATEGORIES.includes(cat)) continue;
+
+        try {
+          const bytes = await ZipEngine.extractEntryBytes(entry);
+          const dataUrl = bytesToDataUrlPng(bytes);
+          const { pixels8x8, palette } = await extract8x8AndPaletteFromDataUrl(dataUrl);
+          state.textures116.set(relPath, {
+            relPath,
+            name: relPath.split('/').pop(),
+            category: cat,
+            dataUrl,
+            palette,
+            pixels8x8
+          });
+          count++;
+        } catch (innerErr) {
+          // Skip malformed non-standard PNG entry
+        }
+      }
+
+      dom.slotPack116.classList.add('loaded');
+      dom.statusPack116.textContent = `${fileName} (${count} Texturen)`;
+      await checkAndBuildDiff();
+    }
+
+    async function loadPack263FromBuffer(ab, fileName) {
+      dom.statusPack263.textContent = 'Analysiere 26.3 ZIP…';
+      pendingEntries263 = await ZipEngine.parseZip(ab);
+      state.pack263Name = fileName;
+
+      let validPngCount = 0;
+      for (const [path] of pendingEntries263.entries()) {
+        const relPath = normalizeTexturePath(path);
+        if (relPath && CATEGORIES.includes(getCategoryFromRelPath(relPath))) {
+          validPngCount++;
+        }
+      }
+
+      dom.slotPack263.classList.add('loaded');
+      dom.statusPack263.textContent = `${fileName} (${validPngCount} Ziel-Texturen)`;
+      await checkAndBuildDiff();
+    }
+
+    // Automatic loading from GitHub Pages repository if pack-1.16.zip & vanilla-26.3.zip are placed next to index.html
+    async function tryAutoLoadRepoPacks() {
+      try {
+        const [res116, res263] = await Promise.all([
+          fetch('./pack-1.16.zip', { cache: 'no-cache' }),
+          fetch('./vanilla-26.3.zip', { cache: 'no-cache' })
+        ]);
+        if (!res116.ok || !res263.ok) return false;
+
+        showToast('Lade pack-1.16.zip & vanilla-26.3.zip vom Server…');
+        dom.statusPack116.textContent = 'Lade pack-1.16.zip vom Repo…';
+        dom.statusPack263.textContent = 'Lade vanilla-26.3.zip vom Repo…';
+
+        const [ab116, ab263] = await Promise.all([
+          res116.arrayBuffer(),
+          res263.arrayBuffer()
+        ]);
+
+        await loadPack116FromBuffer(ab116, 'pack-1.16.zip');
+        await loadPack263FromBuffer(ab263, 'vanilla-26.3.zip');
+        dom.packModal.classList.add('hidden');
+        showToast('Beide Packs automatisch vom GitHub-Repository geladen!');
+        return true;
+      } catch (e) {
+        return false;
+      }
+    }
+
     dom.inputZip116.addEventListener('change', async (e) => {
       const file = e.target.files[0];
       if (!file) return;
       try {
-        dom.statusPack116.textContent = 'Analysiere 1.16.5 ZIP…';
         const ab = await file.arrayBuffer();
-        const entries = await ZipEngine.parseZip(ab);
-
-        state.pack116Buffer = ab;
-        state.pack116Name = file.name;
-        state.textures116.clear();
-
-        let count = 0;
-        for (const [path, entry] of entries.entries()) {
-          const relPath = normalizeTexturePath(path);
-          if (!relPath) continue;
-          const cat = getCategoryFromRelPath(relPath);
-          if (!CATEGORIES.includes(cat)) continue;
-
-          try {
-            const bytes = await ZipEngine.extractEntryBytes(entry);
-            const dataUrl = bytesToDataUrlPng(bytes);
-            const { pixels8x8, palette } = await extract8x8AndPaletteFromDataUrl(dataUrl);
-            state.textures116.set(relPath, {
-              relPath,
-              name: relPath.split('/').pop(),
-              category: cat,
-              dataUrl,
-              palette,
-              pixels8x8
-            });
-            count++;
-          } catch (innerErr) {
-            // Skip malformed non-standard PNG entry
-          }
-        }
-
-        dom.slotPack116.classList.add('loaded');
-        dom.statusPack116.textContent = `${file.name} (${count} Texturen)`;
-        await checkAndBuildDiff();
+        await loadPack116FromBuffer(ab, file.name);
       } catch (err) {
         alert('Fehler beim Lesen des 1.16.5 ZIP-Archivs: ' + err.message);
         dom.statusPack116.textContent = 'Fehler beim Laden';
@@ -2970,22 +3020,8 @@
       const file = e.target.files[0];
       if (!file) return;
       try {
-        dom.statusPack263.textContent = 'Analysiere 26.3 ZIP…';
         const ab = await file.arrayBuffer();
-        pendingEntries263 = await ZipEngine.parseZip(ab);
-        state.pack263Name = file.name;
-
-        let validPngCount = 0;
-        for (const [path] of pendingEntries263.entries()) {
-          const relPath = normalizeTexturePath(path);
-          if (relPath && CATEGORIES.includes(getCategoryFromRelPath(relPath))) {
-            validPngCount++;
-          }
-        }
-
-        dom.slotPack263.classList.add('loaded');
-        dom.statusPack263.textContent = `${file.name} (${validPngCount} Ziel-Texturen)`;
-        await checkAndBuildDiff();
+        await loadPack263FromBuffer(ab, file.name);
       } catch (err) {
         alert('Fehler beim Lesen des Vanilla 26.3 ZIP-Archivs: ' + err.message);
         dom.statusPack263.textContent = 'Fehler beim Laden';
@@ -3646,9 +3682,13 @@
         dom.packModal.classList.add('hidden');
         showToast('Letzter Arbeitsstand aus IndexedDB wiederhergestellt');
       } else {
-        // Pre-populate Demo data behind the modal so if the user clicks "Editor" they immediately see a working studio
-        await loadDemoMode();
-        dom.packModal.classList.remove('hidden');
+        // 1. Try automatic loading from GitHub Pages repository (./pack-1.16.zip & ./vanilla-26.3.zip)
+        const autoLoaded = await tryAutoLoadRepoPacks();
+        if (!autoLoaded) {
+          // 2. Otherwise pre-populate Demo data behind the modal
+          await loadDemoMode();
+          dom.packModal.classList.remove('hidden');
+        }
       }
     })();
   </script>
