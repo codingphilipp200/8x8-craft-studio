@@ -670,6 +670,77 @@
       border-color: rgba(212, 155, 75, 0.35);
     }
 
+    /* Multi-Face Block Switcher Bar */
+    .block-faces-bar {
+      width: 100%;
+      display: flex;
+      align-items: center;
+      gap: 6px;
+      padding: 6px 10px;
+      margin-top: 6px;
+      background: var(--bg-panel);
+      border: 1px solid var(--border-hairline);
+      border-radius: var(--radius-md);
+      overflow-x: auto;
+      scrollbar-width: none;
+    }
+
+    .block-faces-bar::-webkit-scrollbar {
+      display: none;
+    }
+
+    .block-faces-bar.hidden {
+      display: none;
+    }
+
+    .face-chip {
+      min-height: 34px;
+      padding: 0 9px 0 6px;
+      border-radius: var(--radius-sm);
+      background: var(--bg-elevated);
+      border: 1px solid var(--border-hairline);
+      color: var(--text-secondary);
+      display: inline-flex;
+      align-items: center;
+      gap: 6px;
+      font-size: 11px;
+      cursor: pointer;
+      flex-shrink: 0;
+      transition: all 0.12s ease;
+    }
+
+    .face-chip:hover {
+      background: var(--bg-hover);
+      color: var(--text-primary);
+    }
+
+    .face-chip.active {
+      background: var(--accent-soft);
+      border-color: var(--accent);
+      color: var(--text-primary);
+      font-weight: 600;
+    }
+
+    .face-chip-thumb {
+      width: 20px;
+      height: 20px;
+      border-radius: 3px;
+      border: 1px solid rgba(255, 255, 255, 0.16);
+      flex-shrink: 0;
+    }
+
+    .face-chip-dot {
+      width: 6px;
+      height: 6px;
+      border-radius: 50%;
+      background: var(--text-muted);
+      flex-shrink: 0;
+    }
+
+    .face-chip-dot.done { background: var(--emerald); }
+    .face-chip-dot.skipped { background: var(--warning); }
+    .face-chip-dot.pack116 { background: #5A9BD5; }
+
     /* 8x8 Canvas Wrapper */
     .canvas-arena {
       flex: 1;
@@ -1288,7 +1359,10 @@
         <div class="panel-card">
           <div class="card-header">
             <span class="card-title">3×3 Kachel &amp; 3D-Block</span>
-            <button class="btn btn-ghost" id="btnResetCube" style="min-height:24px; padding:0 6px; font-size:10px;">Auto-Spin</button>
+            <div style="display:flex; gap:4px;">
+              <button class="btn btn-ghost" id="btnToggleMultiFaceCube" style="min-height:24px; padding:0 6px; font-size:10px;" title="Zeigt auf dem 3D-Block automatisch Top, Side, Front & Bottom des aktuellen Blocks">3D: Mehrseitig</button>
+              <button class="btn btn-ghost" id="btnResetCube" style="min-height:24px; padding:0 6px; font-size:10px;">Auto-Spin</button>
+            </div>
           </div>
           <div class="preview-split">
             <div class="mini-stage checkerboard" title="3x3 nahtlose Kachel-Vorschau (24x24 px)">
@@ -1307,7 +1381,7 @@
           </div>
           <div class="ref-footer">
             <span>Nahtlos-Check</span>
-            <span>3D Drag-Rotation</span>
+            <span>3D Multi-Face</span>
           </div>
         </div>
 
@@ -1331,12 +1405,17 @@
 
       <!-- Center Stage: 8x8 Pixel Canvas -->
       <section class="center-stage">
-        <div class="file-info-bar">
-          <div class="file-path-group">
-            <span class="category-pill mono" id="currentCategoryBadge">block</span>
-            <span class="current-filename mono" id="currentFilePath">block/chiseled_tuff_bricks.png</span>
+        <div style="width:100%; display:flex; flex-direction:column;">
+          <div class="file-info-bar">
+            <div class="file-path-group">
+              <span class="category-pill mono" id="currentCategoryBadge">block</span>
+              <span class="current-filename mono" id="currentFilePath">Lade Packs vom GitHub-Repository…</span>
+            </div>
+            <span class="status-badge mono" id="currentStatusBadge">Offen</span>
           </div>
-          <span class="status-badge mono" id="currentStatusBadge">Offen</span>
+
+          <!-- Multi-Face Block Switcher Bar (automatically shown for blocks with _top, _side, _bottom, _front, etc.) -->
+          <div class="block-faces-bar hidden" id="blockFacesBar"></div>
         </div>
 
         <div class="canvas-arena">
@@ -1529,7 +1608,7 @@
         <div class="modal-footer">
           <div style="display:flex; gap:8px; flex-wrap:wrap;">
             <button class="btn btn-touch" id="btnStartDemo">
-              <span>Mit 5 Beispiel-Blöcken testen</span>
+              <span>Packs vom GitHub-Repo laden</span>
             </button>
             <button class="btn btn-touch" id="btnClearStorage" style="color:var(--text-muted);" title="Gespeicherten IndexedDB-Stand zurücksetzen">
               <span>Speicher zurücksetzen</span>
@@ -1568,30 +1647,185 @@
         return (crc ^ 0xFFFFFFFF) >>> 0;
       }
 
-      async function inflateRaw(compressedBytes, uncompressedSize) {
-        if (typeof DecompressionStream !== 'undefined') {
-          const ds = new DecompressionStream('deflate-raw');
-          const writer = ds.writable.getWriter();
-          writer.write(compressedBytes);
-          writer.close();
-          const reader = ds.readable.getReader();
-          const chunks = [];
-          let total = 0;
-          while (true) {
-            const { done, value } = await reader.read();
-            if (done) break;
-            chunks.push(value);
-            total += value.byteLength;
+      // Pure-JS RFC 1951 Raw DEFLATE Decompressor (100% compatible with all iPadOS Safari versions, zero stream backpressure bugs)
+      const LEN_BASE = [3,4,5,6,7,8,9,10,11,13,15,17,19,23,27,31,35,43,51,59,67,83,99,115,131,163,195,227,258];
+      const LEN_EXTRA = [0,0,0,0,0,0,0,0,1,1,1,1,2,2,2,2,3,3,3,3,4,4,4,4,5,5,5,5,0];
+      const DIST_BASE = [1,2,3,4,5,7,9,13,17,25,33,49,65,97,129,193,257,385,513,769,1025,1537,2049,3073,4097,6145,8193,12289,16385,24577];
+      const DIST_EXTRA = [0,0,0,0,1,1,2,2,3,3,4,4,5,5,6,6,7,7,8,8,9,9,10,10,11,11,12,12,13,13];
+      const CL_ORDER = [16,17,18,0,8,7,9,6,10,5,11,4,12,3,13,2,14,1,15];
+
+      function buildHuffmanTable(lengths, numSymbols) {
+        const count = new Int32Array(16);
+        let maxBits = 0;
+        for (let i = 0; i < numSymbols; i++) {
+          const l = lengths[i];
+          if (l > 0) {
+            count[l]++;
+            if (l > maxBits) maxBits = l;
           }
-          const out = new Uint8Array(total);
-          let offset = 0;
-          for (const chunk of chunks) {
-            out.set(chunk, offset);
-            offset += chunk.byteLength;
-          }
-          return out;
         }
-        throw new Error('DecompressionStream wird in diesem Browser nicht unterstützt.');
+        if (maxBits === 0) return { table: new Int32Array(1), maxBits: 0 };
+
+        const nextCode = new Int32Array(16);
+        let code = 0;
+        for (let bits = 1; bits <= 15; bits++) {
+          code = (code + count[bits - 1]) << 1;
+          nextCode[bits] = code;
+        }
+
+        const tableSize = 1 << maxBits;
+        const table = new Int32Array(tableSize);
+        table.fill(-1);
+
+        for (let sym = 0; sym < numSymbols; sym++) {
+          const len = lengths[sym];
+          if (len === 0) continue;
+          const c = nextCode[len]++;
+          // Reverse bit order for LSB-first lookup
+          let rev = 0;
+          for (let b = 0; b < len; b++) {
+            rev = (rev << 1) | ((c >>> b) & 1);
+          }
+          const step = 1 << len;
+          const entry = (sym << 4) | len;
+          for (let idx = rev; idx < tableSize; idx += step) {
+            table[idx] = entry;
+          }
+        }
+        return { table, maxBits };
+      }
+
+      const fixedLitLengths = new Uint8Array(288);
+      for (let i = 0; i <= 143; i++) fixedLitLengths[i] = 8;
+      for (let i = 144; i <= 255; i++) fixedLitLengths[i] = 9;
+      for (let i = 256; i <= 279; i++) fixedLitLengths[i] = 7;
+      for (let i = 280; i <= 287; i++) fixedLitLengths[i] = 8;
+      const FIXED_LIT_TABLE = buildHuffmanTable(fixedLitLengths, 288);
+
+      const fixedDistLengths = new Uint8Array(32);
+      fixedDistLengths.fill(5);
+      const FIXED_DIST_TABLE = buildHuffmanTable(fixedDistLengths, 32);
+
+      function inflateRawJS(src, expectedSize) {
+        let out = new Uint8Array(expectedSize > 0 ? expectedSize : Math.max(256, src.length * 3));
+        let outPos = 0;
+        let bitPos = 0;
+        const srcLen = src.length;
+
+        function ensureCap(need) {
+          if (outPos + need <= out.length) return;
+          let nextLen = out.length * 2;
+          while (nextLen < outPos + need) nextLen *= 2;
+          const grown = new Uint8Array(nextLen);
+          grown.set(out);
+          out = grown;
+        }
+
+        function readBits(n) {
+          let val = 0;
+          for (let i = 0; i < n; i++) {
+            const byteIdx = bitPos >>> 3;
+            const bitIdx = bitPos & 7;
+            if (byteIdx < srcLen) {
+              val |= ((src[byteIdx] >>> bitIdx) & 1) << i;
+            }
+            bitPos++;
+          }
+          return val;
+        }
+
+        function decodeSymbol(huff) {
+          const maxBits = huff.maxBits;
+          const byteIdx = bitPos >>> 3;
+          const bitIdx = bitPos & 7;
+          const b0 = byteIdx < srcLen ? src[byteIdx] : 0;
+          const b1 = (byteIdx + 1) < srcLen ? src[byteIdx + 1] : 0;
+          const b2 = (byteIdx + 2) < srcLen ? src[byteIdx + 2] : 0;
+          const look = ((b0 | (b1 << 8) | (b2 << 16)) >>> bitIdx) & ((1 << maxBits) - 1);
+          const entry = huff.table[look];
+          const len = entry & 15;
+          bitPos += len;
+          return entry >>> 4;
+        }
+
+        let bfinal = 0;
+        while (!bfinal && (bitPos >>> 3) <= srcLen) {
+          bfinal = readBits(1);
+          const btype = readBits(2);
+
+          if (btype === 0) {
+            // Uncompressed stored block
+            bitPos = (bitPos + 7) & ~7;
+            const len = readBits(16);
+            readBits(16); // nlen
+            ensureCap(len);
+            const startByte = bitPos >>> 3;
+            out.set(src.subarray(startByte, startByte + len), outPos);
+            outPos += len;
+            bitPos += len * 8;
+          } else if (btype === 1 || btype === 2) {
+            let litTable = FIXED_LIT_TABLE;
+            let distTable = FIXED_DIST_TABLE;
+
+            if (btype === 2) {
+              const hlit = readBits(5) + 257;
+              const hdist = readBits(5) + 1;
+              const hclen = readBits(4) + 4;
+              const clLengths = new Uint8Array(19);
+              for (let i = 0; i < hclen; i++) {
+                clLengths[CL_ORDER[i]] = readBits(3);
+              }
+              const clTable = buildHuffmanTable(clLengths, 19);
+              const allLengths = new Uint8Array(hlit + hdist);
+              let idx = 0;
+              while (idx < hlit + hdist) {
+                const sym = decodeSymbol(clTable);
+                if (sym < 16) {
+                  allLengths[idx++] = sym;
+                } else if (sym === 16) {
+                  const rep = readBits(2) + 3;
+                  const prev = allLengths[idx - 1] || 0;
+                  for (let r = 0; r < rep; r++) allLengths[idx++] = prev;
+                } else if (sym === 17) {
+                  const rep = readBits(3) + 3;
+                  for (let r = 0; r < rep; r++) allLengths[idx++] = 0;
+                } else if (sym === 18) {
+                  const rep = readBits(7) + 11;
+                  for (let r = 0; r < rep; r++) allLengths[idx++] = 0;
+                }
+              }
+              litTable = buildHuffmanTable(allLengths.subarray(0, hlit), hlit);
+              distTable = buildHuffmanTable(allLengths.subarray(hlit, hlit + hdist), hdist);
+            }
+
+            while (true) {
+              const sym = decodeSymbol(litTable);
+              if (sym === 256) break;
+              if (sym < 256) {
+                ensureCap(1);
+                out[outPos++] = sym;
+              } else {
+                const lenIdx = sym - 257;
+                const length = LEN_BASE[lenIdx] + (LEN_EXTRA[lenIdx] ? readBits(LEN_EXTRA[lenIdx]) : 0);
+                const distSym = decodeSymbol(distTable);
+                const dist = DIST_BASE[distSym] + (DIST_EXTRA[distSym] ? readBits(DIST_EXTRA[distSym]) : 0);
+                ensureCap(length);
+                let copySrc = outPos - dist;
+                for (let k = 0; k < length; k++) {
+                  out[outPos++] = out[copySrc++];
+                }
+              }
+            }
+          } else {
+            throw new Error('Ungültiger DEFLATE Block-Typ');
+          }
+        }
+
+        return outPos === out.length ? out : out.subarray(0, outPos);
+      }
+
+      async function inflateRaw(compressedBytes, uncompressedSize) {
+        return inflateRawJS(compressedBytes, uncompressedSize);
       }
 
       // Parse ZIP ArrayBuffer -> Map<path, { name, compressionMethod, compressedData, uncompressedSize, crc, isDirectory }>
@@ -1871,10 +2105,11 @@
       searchQuery: '',
       inspSearchQuery: '',
 
-      // 3D Cube Rotation
+      // 3D Cube Rotation & Multi-Face Mode
       cubeRotX: -26,
       cubeRotY: 38,
-      cubeAutoSpin: false
+      cubeAutoSpin: false,
+      cubeMultiFace: true
     };
 
     /*************************************************************************
@@ -1906,6 +2141,8 @@
       cubeViewport: document.getElementById('cubeViewport'),
       sceneCube: document.getElementById('sceneCube'),
       btnResetCube: document.getElementById('btnResetCube'),
+      btnToggleMultiFaceCube: document.getElementById('btnToggleMultiFaceCube'),
+      blockFacesBar: document.getElementById('blockFacesBar'),
       btnDownloadSinglePng: document.getElementById('btnDownloadSinglePng'),
       btnExportBackupJson: document.getElementById('btnExportBackupJson'),
       btnImportBackupJson: document.getElementById('btnImportBackupJson'),
@@ -2072,40 +2309,59 @@
     // e.g. "MyPack/assets/minecraft/textures/block/stone.png" -> "block/stone.png"
     // or "textures/block/stone.png" -> "block/stone.png"
     // or "block/stone.png" -> "block/stone.png"
+    const DUPLICATE_PARTICLE_SUBFOLDERS = new Set([
+      'block', 'item', 'entity', 'gui', 'painting', 'mob_effect', 'particle',
+      'colormap', 'effect', 'environment', 'font', 'map', 'misc', 'palettes', 'trims'
+    ]);
+
     function normalizeTexturePath(rawPath) {
       if (!rawPath || !rawPath.toLowerCase().endsWith('.png')) return null;
       const p = rawPath.replace(/\\/g, '/');
 
+      let rel = null;
       const marker1 = 'assets/minecraft/textures/';
       const idx1 = p.indexOf(marker1);
       if (idx1 !== -1) {
-        return p.slice(idx1 + marker1.length);
-      }
-
-      const marker2 = 'minecraft/textures/';
-      const idx2 = p.indexOf(marker2);
-      if (idx2 !== -1) {
-        return p.slice(idx2 + marker2.length);
-      }
-
-      const marker3 = 'textures/';
-      const idx3 = p.indexOf(marker3);
-      if (idx3 !== -1) {
-        return p.slice(idx3 + marker3.length);
-      }
-
-      // Check if top-level folder is already one of the known texture categories
-      const parts = p.split('/');
-      for (let i = 0; i < parts.length - 1; i++) {
-        if (CATEGORIES.includes(parts[i])) {
-          return parts.slice(i).join('/');
+        rel = p.slice(idx1 + marker1.length);
+      } else {
+        const marker2 = 'minecraft/textures/';
+        const idx2 = p.indexOf(marker2);
+        if (idx2 !== -1) {
+          rel = p.slice(idx2 + marker2.length);
+        } else {
+          const marker3 = 'textures/';
+          const idx3 = p.indexOf(marker3);
+          if (idx3 !== -1) {
+            rel = p.slice(idx3 + marker3.length);
+          } else {
+            const parts = p.split('/');
+            for (let i = 0; i < parts.length - 1; i++) {
+              if (CATEGORIES.includes(parts[i]) || parts[i] === 'blocks_extra' || parts[i] === 'items_extra') {
+                rel = parts.slice(i).join('/');
+                break;
+              }
+            }
+          }
         }
       }
-      return null;
+
+      if (!rel) return null;
+
+      // Filter out accidental duplicate copy of textures/ nested inside textures/particle/ in textures-26.3.zip
+      if (rel.startsWith('particle/')) {
+        const subParts = rel.split('/');
+        if (subParts.length >= 3 && DUPLICATE_PARTICLE_SUBFOLDERS.has(subParts[1])) {
+          return null;
+        }
+      }
+
+      return rel;
     }
 
     function getCategoryFromRelPath(relPath) {
       const first = relPath.split('/')[0];
+      if (first === 'blocks_extra') return 'block';
+      if (first === 'items_extra') return 'item';
       if (CATEGORIES.includes(first)) return first;
       return 'other';
     }
@@ -2115,6 +2371,80 @@
       if (relPath263 === 'block/dirt_path_top.png') return 'block/grass_path_top.png';
       if (relPath263 === 'block/dirt_path_side.png') return 'block/grass_path_side.png';
       return null;
+    }
+
+    /*************************************************************************
+     * 6B. MULTI-FACE BLOCK ENGINE (Top, Bottom, Side, Front, North/South/East/West)
+     *************************************************************************/
+    const FACE_SUFFIX_REGEX = /_(top_crafting|top_triggered|top_ejecting|top_active|top_awake|top_dormant|top_bloom|top_on|top_off|top_lit|inner_top|input_side|north_crafting|east_crafting|east_triggered|west_triggered|front_ejecting|front_on|front_lit|front_honey|side_lit|side_active|side_bloom|side0|side1|side2|side3|side4|top|bottom|side|front|back|north|south|east|west|up|down|end|inner|outer|empty|occupied|awake|dormant|tentacles)$/i;
+
+    function parseBlockBaseAndFace(relPath) {
+      if (!relPath || !relPath.startsWith('block/')) return null;
+      const stem = relPath.slice('block/'.length).replace(/\.png$/i, '');
+      const m = stem.match(FACE_SUFFIX_REGEX);
+      if (m) {
+        const face = m[1].toLowerCase();
+        const baseName = stem.slice(0, stem.length - m[0].length);
+        return { baseName, face, stem };
+      }
+      return { baseName: stem, face: 'base', stem };
+    }
+
+    // Finds all sibling faces belonging to the same block (across both 26.3 worklist and 1.16.5 pack)
+    function getBlockFaceSiblings(relPath) {
+      const parsed = parseBlockBaseAndFace(relPath);
+      if (!parsed) return [];
+      const targetBase = parsed.baseName;
+
+      const results = [];
+      const seenPaths = new Set();
+
+      // 1. Check 26.3 worklist
+      state.worklist.forEach((w, workIdx) => {
+        if (w.category !== 'block') return;
+        const p = parseBlockBaseAndFace(w.relPath);
+        if (p && p.baseName === targetBase) {
+          seenPaths.add(w.relPath);
+          results.push({
+            relPath: w.relPath,
+            face: p.face,
+            source: 'worklist',
+            workIdx,
+            workItem: w,
+            tex116: null
+          });
+        }
+      });
+
+      // 2. Also check existing 1.16.5 pack textures (e.g. if blackstone.png exists in 1.16.5 and blackstone_top.png is in worklist)
+      for (const [k, tex116] of state.textures116.entries()) {
+        if (!k.startsWith('block/') || seenPaths.has(k)) continue;
+        const p = parseBlockBaseAndFace(k);
+        if (p && p.baseName === targetBase) {
+          seenPaths.add(k);
+          results.push({
+            relPath: k,
+            face: p.face,
+            source: 'pack116',
+            workIdx: -1,
+            workItem: null,
+            tex116
+          });
+        }
+      }
+
+      // Sort faces in a logical order: top, bottom, front/north, side/base, east, west, south/back, variants
+      const faceOrder = ['base', 'top', 'bottom', 'side', 'front', 'north', 'south', 'east', 'west', 'up', 'down', 'end', 'inner_top', 'input_side', 'empty', 'occupied'];
+      results.sort((a, b) => {
+        const ia = faceOrder.indexOf(a.face);
+        const ib = faceOrder.indexOf(b.face);
+        if (ia !== -1 && ib !== -1) return ia - ib;
+        if (ia !== -1) return -1;
+        if (ib !== -1) return 1;
+        return a.face.localeCompare(b.face);
+      });
+
+      return results;
     }
 
     /*************************************************************************
@@ -2383,6 +2713,185 @@
     /*************************************************************************
      * 9. RENDERING & AUTO-PERSISTENCE
      *************************************************************************/
+    function hasVisiblePixels(buf) {
+      if (!buf) return false;
+      for (let i = 3; i < 256; i += 4) {
+        if (buf[i] > 0) return true;
+      }
+      return false;
+    }
+
+    function getSiblingPreviewUrl(sib, liveDataUrl, currentRelPath) {
+      if (!sib) return liveDataUrl;
+      if (sib.relPath === currentRelPath) {
+        if (hasVisiblePixels(state.canvasBuffer)) return liveDataUrl;
+        return (sib.workItem && sib.workItem.vanillaDataUrl) || liveDataUrl;
+      }
+      if (sib.source === 'worklist' && sib.workItem) {
+        if (hasVisiblePixels(sib.workItem.drawnPixels)) {
+          return bufferTo8x8DataUrl(sib.workItem.drawnPixels);
+        }
+        return sib.workItem.vanillaDataUrl || liveDataUrl;
+      }
+      if (sib.source === 'pack116' && sib.tex116) {
+        return sib.tex116.dataUrl || liveDataUrl;
+      }
+      return liveDataUrl;
+    }
+
+    function updateCubeFaces(liveDataUrl) {
+      const currentItem = state.worklist[state.currentWorkIndex];
+      const currentEffectiveUrl = hasVisiblePixels(state.canvasBuffer)
+        ? liveDataUrl
+        : ((currentItem && currentItem.vanillaDataUrl) || liveDataUrl);
+
+      if (!state.cubeMultiFace || !currentItem || currentItem.category !== 'block') {
+        document.querySelectorAll('.cube-face').forEach(face => {
+          face.style.backgroundImage = `url("${currentEffectiveUrl}")`;
+        });
+        return;
+      }
+
+      const siblings = getBlockFaceSiblings(currentItem.relPath);
+      if (siblings.length <= 1) {
+        document.querySelectorAll('.cube-face').forEach(face => {
+          face.style.backgroundImage = `url("${currentEffectiveUrl}")`;
+        });
+        return;
+      }
+
+      const currentParsed = parseBlockBaseAndFace(currentItem.relPath);
+      const curFace = currentParsed ? currentParsed.face : 'base';
+
+      function findSib(candidates) {
+        for (const c of candidates) {
+          const exact = siblings.find(s => s.face === c);
+          if (exact) return exact;
+        }
+        for (const c of candidates) {
+          const partial = siblings.find(s => s.face.startsWith(c));
+          if (partial) return partial;
+        }
+        return siblings[0];
+      }
+
+      let topSib    = findSib(['top', 'up', 'end', 'inner_top', 'base', 'side']);
+      let bottomSib = findSib(['bottom', 'down', 'end', 'top', 'base', 'side']);
+      let frontSib  = findSib(['front', 'north', 'occupied', 'empty', 'side', 'base']);
+      let backSib   = findSib(['back', 'south', 'side', 'base']);
+      let rightSib  = findSib(['east', 'right', 'input_side', 'side', 'base']);
+      let leftSib   = findSib(['west', 'left', 'input_side', 'side', 'base']);
+
+      // Ensure the currently edited face is always live on its matching cube side(s)
+      const curSib = siblings.find(s => s.relPath === currentItem.relPath);
+      if (curSib) {
+        if (curFace.includes('top') || curFace === 'up' || curFace === 'end') topSib = curSib;
+        if (curFace.includes('bottom') || curFace === 'down' || curFace === 'end') bottomSib = curSib;
+        if (curFace.includes('front') || curFace.includes('north') || curFace === 'occupied' || curFace === 'empty') frontSib = curSib;
+        if (curFace.includes('back') || curFace.includes('south')) backSib = curSib;
+        if (curFace.includes('east') || curFace.includes('input_side')) rightSib = curSib;
+        if (curFace.includes('west')) leftSib = curSib;
+        if (curFace.includes('side') || curFace === 'base') {
+          if (!frontSib || frontSib.face === 'base' || frontSib.face === 'side') frontSib = curSib;
+          backSib = curSib;
+          rightSib = curSib;
+          leftSib = curSib;
+        }
+      }
+
+      const setFaceBg = (selector, sib) => {
+        const el = dom.sceneCube.querySelector(selector);
+        if (el) {
+          const url = getSiblingPreviewUrl(sib, liveDataUrl, currentItem.relPath);
+          el.style.backgroundImage = `url("${url}")`;
+        }
+      };
+
+      setFaceBg('.cube-face.top', topSib);
+      setFaceBg('.cube-face.bottom', bottomSib);
+      setFaceBg('.cube-face.front', frontSib);
+      setFaceBg('.cube-face.back', backSib);
+      setFaceBg('.cube-face.right', rightSib);
+      setFaceBg('.cube-face.left', leftSib);
+    }
+
+    async function renderBlockFacesBar() {
+      const currentItem = state.worklist[state.currentWorkIndex];
+      if (!currentItem || currentItem.category !== 'block') {
+        dom.blockFacesBar.classList.add('hidden');
+        dom.blockFacesBar.innerHTML = '';
+        return;
+      }
+
+      const siblings = getBlockFaceSiblings(currentItem.relPath);
+      if (siblings.length <= 1) {
+        dom.blockFacesBar.classList.add('hidden');
+        dom.blockFacesBar.innerHTML = '';
+        return;
+      }
+
+      // Decode all sibling previews in parallel so thumbnails & 3D cube faces are ready
+      await Promise.all(siblings.map(async (sib) => {
+        if (sib.source === 'worklist' && sib.workItem) {
+          await ensureWorkItemVanillaUrl(sib.workItem);
+        } else if (sib.source === 'pack116' && sib.tex116) {
+          await ensureTexture116Decoded(sib.tex116);
+        }
+      }));
+
+      dom.blockFacesBar.innerHTML = '';
+      dom.blockFacesBar.classList.remove('hidden');
+
+      const tag = document.createElement('span');
+      tag.className = 'section-tag';
+      tag.textContent = `Block-Seiten (${siblings.length})`;
+      dom.blockFacesBar.appendChild(tag);
+
+      const liveDataUrl = dom.drawCanvas.toDataURL('image/png');
+      for (const sib of siblings) {
+        const btn = document.createElement('button');
+        const isCurrent = sib.relPath === currentItem.relPath;
+        btn.className = 'face-chip' + (isCurrent ? ' active' : '');
+
+        const thumbUrl = getSiblingPreviewUrl(sib, liveDataUrl, currentItem.relPath);
+        const dotClass = sib.source === 'pack116'
+          ? 'pack116'
+          : (sib.workItem ? sib.workItem.status : 'pending');
+
+        const labelText = sib.face === 'base'
+          ? 'Basis / Seite'
+          : sib.face.replace(/_/g, ' ');
+
+        btn.innerHTML = `
+          <img class="face-chip-thumb pixelated checkerboard" src="${thumbUrl}" alt="" />
+          <span class="mono">${labelText}</span>
+          <span class="face-chip-dot ${dotClass}" title="${sib.source === 'pack116' ? 'Bereits in 1.16.5 vorhanden' : sib.workItem.status}"></span>
+        `;
+
+        btn.addEventListener('click', async () => {
+          if (sib.source === 'worklist' && sib.workIdx !== -1) {
+            await loadWorkItem(sib.workIdx);
+          } else if (sib.source === 'pack116' && sib.tex116) {
+            await ensureTexture116Decoded(sib.tex116);
+            state.selectedInspirationPath = sib.relPath;
+            if (sib.tex116.palette && sib.tex116.palette.length > 0) {
+              state.extractedPalette = sib.tex116.palette.slice(0, 16);
+              renderPaletteGrids();
+            }
+            pushUndoSnapshot();
+            state.canvasBuffer.set(sib.tex116.pixels8x8);
+            syncCanvasAndSave();
+            showToast(`1.16 Seite "${sib.tex116.name}" als 8×8-Basis übernommen`);
+          }
+        });
+
+        dom.blockFacesBar.appendChild(btn);
+      }
+
+      // Refresh 3D cube now that all sibling textures are decoded
+      updateCubeFaces(liveDataUrl);
+    }
+
     function renderAllPreviews() {
       // 1. Main 8x8 Canvas
       const imgData = new ImageData(new Uint8ClampedArray(state.canvasBuffer), 8, 8);
@@ -2397,11 +2906,9 @@
         }
       }
 
-      // 3. 3D Cube Faces
+      // 3. 3D Cube Faces (Multi-Face aware)
       const dataUrl = dom.drawCanvas.toDataURL('image/png');
-      document.querySelectorAll('.cube-face').forEach(face => {
-        face.style.backgroundImage = `url("${dataUrl}")`;
-      });
+      updateCubeFaces(dataUrl);
     }
 
     let saveDebounceTimer = null;
@@ -2642,6 +3149,7 @@
       }
 
       renderAllPreviews();
+      await renderBlockFacesBar();
       await renderInspirationBar();
       renderQueueDrawer();
       persistStateToIndexedDB();
@@ -3567,7 +4075,7 @@
       persistStateToIndexedDB();
     });
 
-    // 3D Cube Auto-Spin Toggle
+    // 3D Cube Auto-Spin & Multi-Face Toggle
     dom.btnResetCube.addEventListener('click', () => {
       state.cubeAutoSpin = !state.cubeAutoSpin;
       if (!state.cubeAutoSpin) {
@@ -3576,6 +4084,13 @@
         updateCubeTransform();
       }
       dom.btnResetCube.textContent = state.cubeAutoSpin ? 'Stopp Spin' : 'Auto-Spin';
+    });
+
+    dom.btnToggleMultiFaceCube.addEventListener('click', () => {
+      state.cubeMultiFace = !state.cubeMultiFace;
+      dom.btnToggleMultiFaceCube.textContent = state.cubeMultiFace ? '3D: Mehrseitig' : '3D: 1-Textur';
+      renderAllPreviews();
+      showToast(state.cubeMultiFace ? '3D-Block zeigt alle zugehörigen Block-Seiten' : '3D-Block zeigt aktuelle Textur auf allen 6 Seiten');
     });
 
     // Filters & Search
@@ -3654,7 +4169,10 @@
     dom.btnOpenPackModalLogo.addEventListener('click', () => dom.packModal.classList.remove('hidden'));
     dom.btnCloseModal.addEventListener('click', () => dom.packModal.classList.add('hidden'));
     dom.btnConfirmPacks.addEventListener('click', () => dom.packModal.classList.add('hidden'));
-    dom.btnStartDemo.addEventListener('click', loadDemoMode);
+    dom.btnStartDemo.addEventListener('click', async () => {
+      const ok = await tryAutoLoadRepoPacks();
+      if (!ok) await loadDemoMode();
+    });
 
     dom.btnClearStorage.addEventListener('click', async () => {
       if (!confirm('Möchtest du den gesamten gespeicherten Fortschritt in IndexedDB wirklich löschen?')) return;
