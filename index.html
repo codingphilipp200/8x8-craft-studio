@@ -642,31 +642,45 @@
     .cube-face.top    { transform: rotateX( 90deg) translateZ(44px); filter: brightness(1.10); }
     .cube-face.bottom { transform: rotateX(-90deg) translateZ(44px); filter: brightness(0.58); }
 
-    /* Minecraft 3D Hanging Sign Geometry (Board + Chains + Crossbar) */
-    .scene-cube.mode-hanging-sign .cube-face.front  { width: 88px; height: 62px; top: 26px; left: 0; transform: rotateY(  0deg) translateZ(8px); }
-    .scene-cube.mode-hanging-sign .cube-face.back   { width: 88px; height: 62px; top: 26px; left: 0; transform: rotateY(180deg) translateZ(8px); }
-    .scene-cube.mode-hanging-sign .cube-face.right  { width: 16px; height: 62px; top: 26px; left: 36px; transform: rotateY( 90deg) translateZ(44px); }
-    .scene-cube.mode-hanging-sign .cube-face.left   { width: 16px; height: 62px; top: 26px; left: 36px; transform: rotateY(-90deg) translateZ(44px); }
-    .scene-cube.mode-hanging-sign .cube-face.top    { width: 88px; height: 16px; top: 18px; left: 0; transform: rotateX( 90deg) translateZ(0px); }
-    .scene-cube.mode-hanging-sign .cube-face.bottom { width: 88px; height: 16px; top: 80px; left: 0; transform: rotateX(-90deg) translateZ(0px); }
+    /* Minecraft 3D Hanging Sign Geometry (Board + Chains + Crossbar / Wall Bar) */
+    .scene-cube.mode-hanging-sign .cube-face.front  { width: 88px; height: 62px; top: 26px; left: 0; transform: rotateY(  0deg) translateZ(7px); }
+    .scene-cube.mode-hanging-sign .cube-face.back   { width: 88px; height: 62px; top: 26px; left: 0; transform: rotateY(180deg) translateZ(7px); }
+    .scene-cube.mode-hanging-sign .cube-face.right  { width: 14px; height: 62px; top: 26px; left: 37px; transform: rotateY( 90deg) translateZ(44px); }
+    .scene-cube.mode-hanging-sign .cube-face.left   { width: 14px; height: 62px; top: 26px; left: 37px; transform: rotateY(-90deg) translateZ(44px); }
+    .scene-cube.mode-hanging-sign .cube-face.top    { width: 88px; height: 14px; top: 19px; left: 0; transform: rotateX( 90deg) translateZ(0px); }
+    .scene-cube.mode-hanging-sign .cube-face.bottom { width: 88px; height: 14px; top: 81px; left: 0; transform: rotateX(-90deg) translateZ(0px); }
 
     .hs-extra { display: none; position: absolute; backface-visibility: visible; border: none; }
     .scene-cube.mode-hanging-sign .hs-extra { display: block; }
-    .cube-face.hs-bar-front { width: 96px; height: 14px; top: -8px; left: -4px; transform: rotateY(0deg) translateZ(8px); }
-    .cube-face.hs-bar-top   { width: 96px; height: 16px; top: -16px; left: -4px; transform: rotateX(90deg) translateZ(0px); }
-    .cube-face.hs-chains    { width: 78px; height: 24px; top: 4px; left: 5px; transform: rotateY(0deg) translateZ(0px); }
+    .cube-face.hs-bar-front { width: 96px; height: 14px; top: -10px; left: -4px; transform: rotateY(0deg) translateZ(7px); }
+    .cube-face.hs-bar-back  { width: 96px; height: 14px; top: -10px; left: -4px; transform: rotateY(180deg) translateZ(7px); }
+    .cube-face.hs-bar-top   { width: 96px; height: 14px; top: -17px; left: -4px; transform: rotateX(90deg) translateZ(0px); }
+    .cube-face.hs-bar-bottom{ width: 96px; height: 14px; top: -3px; left: -4px; transform: rotateX(-90deg) translateZ(0px); }
+    .cube-face.hs-chain-l   { width: 22px; height: 28px; top: 0px; left: 10px; transform: rotateY(0deg) translateZ(0px); }
+    .cube-face.hs-chain-r   { width: 22px; height: 28px; top: 0px; left: 56px; transform: rotateY(0deg) translateZ(0px); }
 
-    /* Minecraft 3D Standing Sign Geometry (Wide Board + Center Post) */
+    /* Ceiling V-Chain mode: hide crossbar (or keep small ceiling mount), show centered V-chains */
+    .scene-cube.mode-hanging-sign.placement-ceiling-v .cube-face.hs-bar-front,
+    .scene-cube.mode-hanging-sign.placement-ceiling-v .cube-face.hs-bar-back,
+    .scene-cube.mode-hanging-sign.placement-ceiling-v .cube-face.hs-bar-top,
+    .scene-cube.mode-hanging-sign.placement-ceiling-v .cube-face.hs-bar-bottom { display: none; }
+    .scene-cube.mode-hanging-sign.placement-ceiling-v .cube-face.hs-chain-l { width: 52px; height: 34px; top: -6px; left: 18px; }
+    .scene-cube.mode-hanging-sign.placement-ceiling-v .cube-face.hs-chain-r { display: none; }
+
+    /* Minecraft 3D Standing Sign Geometry (Wide Board + 4-Sided Center Post) */
     .scene-cube.mode-sign .cube-face.front  { width: 96px; height: 48px; top: 6px; left: -4px; transform: rotateY(  0deg) translateZ(6px); }
     .scene-cube.mode-sign .cube-face.back   { width: 96px; height: 48px; top: 6px; left: -4px; transform: rotateY(180deg) translateZ(6px); }
     .scene-cube.mode-sign .cube-face.right  { width: 12px; height: 48px; top: 6px; left: 38px; transform: rotateY( 90deg) translateZ(48px); }
     .scene-cube.mode-sign .cube-face.left   { width: 12px; height: 48px; top: 6px; left: 38px; transform: rotateY(-90deg) translateZ(48px); }
     .scene-cube.mode-sign .cube-face.top    { width: 96px; height: 12px; top: 0px; left: -4px; transform: rotateX( 90deg) translateZ(0px); }
     .scene-cube.mode-sign .cube-face.bottom { width: 96px; height: 12px; top: 48px; left: -4px; transform: rotateX(-90deg) translateZ(0px); }
-    .sign-post-extra { display: none; position: absolute; backface-visibility: visible; border: none; }
+    .sign-post-extra { display: none; position: absolute; backface-visibility: hidden; border: none; }
     .scene-cube.mode-sign .sign-post-extra { display: block; }
-    .cube-face.sign-post-front { width: 12px; height: 42px; top: 54px; left: 38px; transform: rotateY(0deg) translateZ(6px); }
-    .cube-face.sign-post-side  { width: 12px; height: 42px; top: 54px; left: 38px; transform: rotateY(90deg) translateZ(6px); }
+    .scene-cube.mode-sign.placement-wall .sign-post-extra { display: none; }
+    .cube-face.sign-post-front { width: 12px; height: 42px; top: 54px; left: 38px; transform: rotateY(  0deg) translateZ(6px); }
+    .cube-face.sign-post-back  { width: 12px; height: 42px; top: 54px; left: 38px; transform: rotateY(180deg) translateZ(6px); }
+    .cube-face.sign-post-right { width: 12px; height: 42px; top: 54px; left: 38px; transform: rotateY( 90deg) translateZ(6px); }
+    .cube-face.sign-post-left  { width: 12px; height: 42px; top: 54px; left: 38px; transform: rotateY(-90deg) translateZ(6px); }
 
     /* Center Stage */
     .center-stage {
@@ -1416,9 +1430,10 @@
               <button class="seg-btn active" id="btnPreviewMode3D">3D</button>
               <button class="seg-btn" id="btnPreviewMode2D">2D</button>
             </div>
-            <div class="seg-group" title="Meine gezeichnete Textur vs. Vanilla-Vorlage im 3D/2D-Modell">
+            <div class="seg-group" title="Quelle für 3D/2D-Vorschau: Meine Textur, Vanilla-Vorlage oder 1.16 Inspiration">
               <button class="seg-btn active" id="btnPreviewSrcAuto">Meine</button>
               <button class="seg-btn" id="btnPreviewSrcVanilla">Vanilla</button>
+              <button class="seg-btn" id="btnPreviewSrc116">1.16</button>
             </div>
           </div>
 
@@ -1433,10 +1448,15 @@
                 <canvas width="128" height="128" class="cube-face bottom pixelated"></canvas>
                 <!-- Extra 3D geometry for Hanging Signs & Standing Signs -->
                 <canvas width="128" height="32" class="cube-face hs-extra hs-bar-front pixelated"></canvas>
+                <canvas width="128" height="32" class="cube-face hs-extra hs-bar-back pixelated"></canvas>
                 <canvas width="128" height="32" class="cube-face hs-extra hs-bar-top pixelated"></canvas>
-                <canvas width="128" height="48" class="cube-face hs-extra hs-chains pixelated"></canvas>
+                <canvas width="128" height="32" class="cube-face hs-extra hs-bar-bottom pixelated"></canvas>
+                <canvas width="64" height="64" class="cube-face hs-extra hs-chain-l pixelated"></canvas>
+                <canvas width="64" height="64" class="cube-face hs-extra hs-chain-r pixelated"></canvas>
                 <canvas width="32" height="64" class="cube-face sign-post-extra sign-post-front pixelated"></canvas>
-                <canvas width="32" height="64" class="cube-face sign-post-extra sign-post-side pixelated"></canvas>
+                <canvas width="32" height="64" class="cube-face sign-post-extra sign-post-back pixelated"></canvas>
+                <canvas width="32" height="64" class="cube-face sign-post-extra sign-post-right pixelated"></canvas>
+                <canvas width="32" height="64" class="cube-face sign-post-extra sign-post-left pixelated"></canvas>
               </div>
             </div>
             <div class="mini-stage checkerboard hidden" id="tilePreviewStage" title="2D-Muster / Inventar-Vorschau (Antippen für Zoom)">
@@ -1444,9 +1464,10 @@
             </div>
           </div>
 
-          <div class="ref-footer">
-            <span id="previewStatusLabel">3D-Modell (Drag zum Drehen)</span>
-            <div style="display:flex; gap:4px;">
+          <div class="ref-footer" style="flex-wrap:wrap; gap:4px;">
+            <span id="previewStatusLabel">3D-Modell</span>
+            <div style="display:flex; gap:4px; align-items:center;">
+              <button class="btn" id="btnSignPlacement" style="display:none; min-height:24px; padding:0 7px; font-size:10px;" title="Platzierung wechseln (Decke, Wand, Boden)">Pos: Wand/Decke</button>
               <button class="btn btn-ghost" id="btnToggleMultiFaceCube" style="min-height:22px; padding:0 5px; font-size:10px;">Mehrseitig</button>
               <button class="btn btn-ghost" id="btnResetCube" style="min-height:22px; padding:0 5px; font-size:10px;">Spin</button>
             </div>
@@ -1497,6 +1518,17 @@
           </div>
         </div>
 
+        <!-- Interactive Paste Placement Bar (shown when placing a copied region) -->
+        <div class="block-faces-bar hidden" id="pastePlacementBar" style="border-color:var(--accent); background:rgba(217,119,87,0.12); margin-bottom:6px; justify-content:space-between;">
+          <span class="mono" style="font-size:11px; font-weight:600; color:var(--accent);" id="pasteInfoLabel">Einfügen: Tippe/Ziehe auf Canvas zum Positionieren</span>
+          <div style="display:flex; gap:5px; flex-wrap:wrap;">
+            <button class="btn" id="btnPasteResetOffset" style="min-height:30px; padding:0 8px; font-size:11px;">1:1 Position</button>
+            <button class="btn btn-blue" id="btnPasteProtectMode" style="min-height:30px; padding:0 8px; font-size:11px;" title="Schützt bereits gezeichnete Pixel vor dem Überschreiben">Nur leere Pixel</button>
+            <button class="btn btn-emerald" id="btnPasteConfirm" style="min-height:30px; padding:0 10px; font-size:11px;">✓ Einfügen</button>
+            <button class="btn" id="btnPasteCancel" style="min-height:30px; padding:0 8px; font-size:11px;">×</button>
+          </div>
+        </div>
+
         <div class="stage-footer">
           <div class="coord-readout mono">
             <span id="coordText">X: –  Y: –</span>
@@ -1505,9 +1537,10 @@
             <span>·</span>
             <span id="selectionCountText">Auswahl: 0 px</span>
           </div>
-          <div style="display:flex; gap:6px;">
+          <div style="display:flex; gap:6px; flex-wrap:wrap;">
             <button class="btn" id="btnCopySelection" style="min-height:34px;" title="Ausgewählte Pixel (oder ganzes Canvas) mit exakten Koordinaten in die Zwischenablage rechts kopieren">Kopieren</button>
             <button class="btn" id="btnClearSelection" style="min-height:34px;" title="Pixel-Auswahl aufheben">Ausw. ×</button>
+            <button class="btn btn-accent" id="btnToggleUvZones" style="min-height:34px;" title="Zeigt im Canvas beschriftete UV-Bereiche (z. B. Kette, Brett, Pfosten)">UV-Zonen: An</button>
             <button class="btn" id="btnToggleGrid" style="min-height:34px;">Raster: An</button>
           </div>
         </div>
@@ -2265,7 +2298,10 @@
       cubeAutoSpin: false,
       cubeMultiFace: true,
       previewMode: '3d', // '3d' | '2d'
-      previewSource: 'auto' // 'auto' (Meine Textur, falls gezeichnet, sonst Vanilla) | 'vanilla'
+      previewSource: 'auto', // 'auto' | 'vanilla' | '116'
+      signPlacement: 'wall', // Hanging Sign: 'wall' | 'ceiling-v' | 'ceiling-p'; Standing Sign: 'ground' | 'wall'
+      showUvZones: true,
+      pendingPaste: null // { entry, dx, dy, protectExisting }
     };
     /*************************************************************************
      * 4. DOM REFERENCES & IMAGE HELPERS
@@ -2304,6 +2340,8 @@
       btnPreviewMode2D: document.getElementById('btnPreviewMode2D'),
       btnPreviewSrcAuto: document.getElementById('btnPreviewSrcAuto'),
       btnPreviewSrcVanilla: document.getElementById('btnPreviewSrcVanilla'),
+      btnPreviewSrc116: document.getElementById('btnPreviewSrc116'),
+      btnSignPlacement: document.getElementById('btnSignPlacement'),
       previewStatusLabel: document.getElementById('previewStatusLabel'),
       tilePreviewStage: document.getElementById('tilePreviewStage'),
       tileCanvas: document.getElementById('tileCanvas'),
@@ -2326,11 +2364,18 @@
       drawCanvas: document.getElementById('drawCanvas'),
       vanillaOverlayCanvas: document.getElementById('vanillaOverlayCanvas'),
       hoverCursorCanvas: document.getElementById('hoverCursorCanvas'),
+      pastePlacementBar: document.getElementById('pastePlacementBar'),
+      pasteInfoLabel: document.getElementById('pasteInfoLabel'),
+      btnPasteResetOffset: document.getElementById('btnPasteResetOffset'),
+      btnPasteProtectMode: document.getElementById('btnPasteProtectMode'),
+      btnPasteConfirm: document.getElementById('btnPasteConfirm'),
+      btnPasteCancel: document.getElementById('btnPasteCancel'),
       coordText: document.getElementById('coordText'),
       hoverHexText: document.getElementById('hoverHexText'),
       selectionCountText: document.getElementById('selectionCountText'),
       btnCopySelection: document.getElementById('btnCopySelection'),
       btnClearSelection: document.getElementById('btnClearSelection'),
+      btnToggleUvZones: document.getElementById('btnToggleUvZones'),
       btnToggleGrid: document.getElementById('btnToggleGrid'),
       activeToolLabel: document.getElementById('activeToolLabel'),
       btnUndo: document.getElementById('btnUndo'),
@@ -3113,19 +3158,71 @@
       addPixelsToClipboard(pixels, w, h, baseTitle);
     }
 
+    function getEntryMinXY(entry) {
+      let minX = Infinity, minY = Infinity;
+      for (const p of entry.pixels) {
+        if (p.x < minX) minX = p.x;
+        if (p.y < minY) minY = p.y;
+      }
+      return { minX: minX === Infinity ? 0 : minX, minY: minY === Infinity ? 0 : minY };
+    }
+
     function pasteClipboardEntry(entry) {
-      if (!entry || !entry.pixels) return;
+      if (!entry || !entry.pixels || entry.pixels.length === 0) return;
+      const { minX, minY } = getEntryMinXY(entry);
+      state.pendingPaste = {
+        entry,
+        minX,
+        minY,
+        dx: 0,
+        dy: 0,
+        protectExisting: true
+      };
+      dom.pastePlacementBar.classList.remove('hidden');
+      updatePasteBarUI();
+      drawGridAndSelectionOverlay(-1, -1);
+      showToast('Tippe/Ziehe auf dem Canvas, um die Zielposition zu wählen');
+    }
+
+    function updatePasteBarUI() {
+      const pp = state.pendingPaste;
+      if (!pp) return;
+      dom.pasteInfoLabel.textContent = `Einfügen (${pp.entry.title}): Offset X=${pp.dx >= 0 ? '+' : ''}${pp.dx}, Y=${pp.dy >= 0 ? '+' : ''}${pp.dy}`;
+      dom.btnPasteProtectMode.textContent = pp.protectExisting ? 'Schutz: Nur leere Pixel' : 'Überschreiben: An';
+      dom.btnPasteProtectMode.className = pp.protectExisting ? 'btn btn-blue' : 'btn btn-accent';
+    }
+
+    function commitPendingPaste() {
+      const pp = state.pendingPaste;
+      if (!pp) return;
       pushUndoSnapshot();
       const w = state.canvasW, h = state.canvasH;
       let pastedCount = 0;
-      for (const p of entry.pixels) {
-        if (p.x >= 0 && p.x < w && p.y >= 0 && p.y < h && p.a > 0) {
-          setPixelRGBA(state.canvasBuffer, w, h, p.x, p.y, p.r, p.g, p.b, p.a);
+      let skippedCount = 0;
+      for (const p of pp.entry.pixels) {
+        const tx = p.x + pp.dx;
+        const ty = p.y + pp.dy;
+        if (tx >= 0 && tx < w && ty >= 0 && ty < h && p.a > 0) {
+          if (pp.protectExisting) {
+            const [, , , curA] = getPixelRGBA(state.canvasBuffer, w, h, tx, ty);
+            if (curA > 0) { skippedCount++; continue; }
+          }
+          setPixelRGBA(state.canvasBuffer, w, h, tx, ty, p.r, p.g, p.b, p.a);
           pastedCount++;
         }
       }
+      state.pendingPaste = null;
+      dom.pastePlacementBar.classList.add('hidden');
       syncCanvasAndSave();
-      showToast(`"${entry.title}" (${pastedCount} px) an exakt gleicher Stelle eingefügt!`);
+      showToast(skippedCount > 0
+        ? `${pastedCount} px eingefügt (${skippedCount} bestehende geschützt)`
+        : `${pastedCount} px eingefügt!`);
+    }
+
+    function cancelPendingPaste() {
+      state.pendingPaste = null;
+      dom.pastePlacementBar.classList.add('hidden');
+      drawGridAndSelectionOverlay(-1, -1);
     }
 
     function renderClipboardList() {
@@ -3231,14 +3328,50 @@
       const currentItem = state.worklist[state.currentWorkIndex];
       const w = state.canvasW, h = state.canvasH;
       const activeCanvasHasPixels = hasVisiblePixels(state.canvasBuffer);
-      const useVanilla = state.previewSource === 'vanilla' || !activeCanvasHasPixels;
-      const effectiveActiveSource = useVanilla ? dom.refCanvas : dom.drawCanvas;
-      const srcW = effectiveActiveSource.width || w;
-      const srcH = effectiveActiveSource.height || h;
+
+      let effectiveActiveSource = dom.drawCanvas;
+      let srcSuffix = ' (Meine)';
+      let is116Source = false;
+
+      if (state.previewSource === '116') {
+        const insp = state.textures116.get(state.selectedInspirationPath);
+        if (insp) {
+          await ensureTexture116Decoded(insp);
+          if (insp.dataUrl) {
+            const inspImg = await getCachedImage(insp.dataUrl);
+            if (inspImg) {
+              effectiveActiveSource = inspImg;
+              is116Source = true;
+              srcSuffix = ' (1.16)';
+            }
+          }
+        }
+        if (!is116Source) {
+          effectiveActiveSource = dom.refCanvas;
+          srcSuffix = ' (Vanilla)';
+        }
+      } else if (state.previewSource === 'vanilla' || !activeCanvasHasPixels) {
+        effectiveActiveSource = dom.refCanvas;
+        srcSuffix = ' (Vanilla)';
+      }
+
+      const srcW = effectiveActiveSource.width || effectiveActiveSource.naturalWidth || w;
+      const srcH = effectiveActiveSource.height || effectiveActiveSource.naturalHeight || h;
 
       // Toggle 3D vs 2D stage visibility
       dom.cubeViewport.classList.toggle('hidden', state.previewMode !== '3d');
       dom.tilePreviewStage.classList.toggle('hidden', state.previewMode !== '2d');
+
+      // Show Placement toggle for Hanging Signs & Standing Signs
+      const isHangingSign = currentItem && currentItem.category === 'block' && /hanging_sign/.test(currentItem.relPath);
+      const isStandingSign = currentItem && currentItem.category === 'block' && !isHangingSign && /_sign\.png$/i.test(currentItem.relPath);
+      dom.btnSignPlacement.style.display = (state.previewMode === '3d' && (isHangingSign || isStandingSign)) ? 'inline-flex' : 'none';
+      if (isHangingSign) {
+        const pLabels = { 'wall': 'Pos: Wand', 'ceiling-v': 'Pos: Decke (V)', 'ceiling-p': 'Pos: Decke (II)' };
+        dom.btnSignPlacement.textContent = pLabels[state.signPlacement] || 'Pos: Wand';
+      } else if (isStandingSign) {
+        dom.btnSignPlacement.textContent = state.signPlacement === 'wall' ? 'Pos: Wand' : 'Pos: Boden';
+      }
 
       // A. 2D Pattern / Slot Preview (160x160)
       tileCtx.clearRect(0, 0, 160, 160);
@@ -3267,18 +3400,24 @@
       }
 
       if (state.previewMode === '2d') {
-        dom.previewStatusLabel.textContent = (isStandardBlockTile ? '2×2 Nahtlos-Muster' : `2D-Muster (${srcW}×${srcH})`) + (useVanilla ? ' · Vanilla' : ' · Meine');
+        dom.previewStatusLabel.textContent = (isStandardBlockTile ? '2×2 Nahtlos-Muster' : `2D-Muster (${srcW}×${srcH})`) + srcSuffix;
         return;
       }
 
       // B. 3D Minecraft Model Preview
-      dom.sceneCube.classList.remove('mode-hanging-sign', 'mode-sign');
+      dom.sceneCube.classList.remove('mode-hanging-sign', 'mode-sign', 'placement-wall', 'placement-ceiling-v', 'placement-ceiling-p');
       if (!currentItem) return;
-      const srcSuffix = useVanilla ? ' (Vanilla)' : ' (Meine)';
 
-      // 1. Authentic 3D Hanging Sign (board + crossbar + chains mapped from Minecraft UV layout)
-      if (currentItem.category === 'block' && /hanging_sign/.test(currentItem.relPath)) {
+      // If 1.16 Inspiration is an entity/signs/ texture (64x32), render it on the 3D Standing Sign!
+      const is116EntitySign = is116Source && srcW === srcH * 2 && /signs?\//i.test(state.selectedInspirationPath || '');
+
+      // 1. Authentic 3D Hanging Sign (Wall, Ceiling-V, Ceiling-Parallel)
+      if (isHangingSign && !is116EntitySign) {
         dom.sceneCube.classList.add('mode-hanging-sign');
+        if (state.signPlacement === 'ceiling-v') dom.sceneCube.classList.add('placement-ceiling-v');
+        else if (state.signPlacement === 'ceiling-p') dom.sceneCube.classList.add('placement-ceiling-p');
+        else dom.sceneCube.classList.add('placement-wall');
+
         dom.previewStatusLabel.textContent = '3D Hängeschild' + srcSuffix;
         const sx = (u) => Math.round((u / 32) * srcW);
         const sy = (v) => Math.round((v / 32) * srcH);
@@ -3288,26 +3427,40 @@
         drawSharpFaceCanvas('.cube-face.bottom', effectiveActiveSource, sx(2), sy(26), sx(14), sy(2));
         drawSharpFaceCanvas('.cube-face.left',   effectiveActiveSource, sx(0), sy(16), sx(2),  sy(10));
         drawSharpFaceCanvas('.cube-face.right',  effectiveActiveSource, sx(16),sy(16), sx(2),  sy(10));
-        drawSharpFaceCanvas('.cube-face.hs-bar-front', effectiveActiveSource, sx(0), sy(2), sx(16), sy(4));
-        drawSharpFaceCanvas('.cube-face.hs-bar-top',   effectiveActiveSource, sx(0), sy(0), sx(16), sy(2));
-        drawSharpFaceCanvas('.cube-face.hs-chains',    effectiveActiveSource, sx(22), sy(0), sx(10), sy(13));
+        drawSharpFaceCanvas('.cube-face.hs-bar-front',  effectiveActiveSource, sx(0), sy(2), sx(16), sy(4));
+        drawSharpFaceCanvas('.cube-face.hs-bar-back',   effectiveActiveSource, sx(0), sy(2), sx(16), sy(4));
+        drawSharpFaceCanvas('.cube-face.hs-bar-top',    effectiveActiveSource, sx(0), sy(0), sx(16), sy(2));
+        drawSharpFaceCanvas('.cube-face.hs-bar-bottom', effectiveActiveSource, sx(0), sy(4), sx(16), sy(2));
+
+        if (state.signPlacement === 'ceiling-v') {
+          drawSharpFaceCanvas('.cube-face.hs-chain-l', effectiveActiveSource, sx(25), sy(0), sx(7), sy(13));
+        } else {
+          // Parallel chains (unchained/unwarped 3x6 chain strip)
+          drawSharpFaceCanvas('.cube-face.hs-chain-l', effectiveActiveSource, sx(22), sy(0), sx(3), sy(6));
+          drawSharpFaceCanvas('.cube-face.hs-chain-r', effectiveActiveSource, sx(22), sy(0), sx(3), sy(6));
+        }
         return;
       }
 
-      // 2. Authentic 3D Standing Sign (wide board + post)
-      if (currentItem.category === 'block' && /_sign\.png$/i.test(currentItem.relPath)) {
+      // 2. Authentic 3D Standing / Wall Sign (supports both 32x32 26.3 block sheet AND 64x32 1.16 entity/signs sheet!)
+      if (isStandingSign || is116EntitySign) {
         dom.sceneCube.classList.add('mode-sign');
-        dom.previewStatusLabel.textContent = '3D Schild' + srcSuffix;
-        const sx = (u) => Math.round((u / 32) * srcW);
+        if (state.signPlacement === 'wall') dom.sceneCube.classList.add('placement-wall');
+        dom.previewStatusLabel.textContent = (state.signPlacement === 'wall' ? '3D Wandschild' : '3D Schild') + srcSuffix;
+        const baseW = is116EntitySign ? 64 : 32;
+        const sx = (u) => Math.round((u / baseW) * srcW);
         const sy = (v) => Math.round((v / 32) * srcH);
         drawSharpFaceCanvas('.cube-face.front',  effectiveActiveSource, sx(2), sy(2),  sx(24), sy(12));
-        drawSharpFaceCanvas('.cube-face.back',   effectiveActiveSource, sx(2), sy(16), sx(24), sy(12));
+        drawSharpFaceCanvas('.cube-face.back',   effectiveActiveSource, sx(28), sy(2), sx(24), sy(12));
         drawSharpFaceCanvas('.cube-face.top',    effectiveActiveSource, sx(2), sy(0),  sx(24), sy(2));
-        drawSharpFaceCanvas('.cube-face.bottom', effectiveActiveSource, sx(2), sy(14), sx(24), sy(2));
+        drawSharpFaceCanvas('.cube-face.bottom', effectiveActiveSource, sx(26), sy(0), sx(24), sy(2));
         drawSharpFaceCanvas('.cube-face.left',   effectiveActiveSource, sx(0), sy(2),  sx(2),  sy(12));
         drawSharpFaceCanvas('.cube-face.right',  effectiveActiveSource, sx(26),sy(2),  sx(2),  sy(12));
-        drawSharpFaceCanvas('.cube-face.sign-post-front', effectiveActiveSource, sx(0), sy(16), sx(4), sy(12));
-        drawSharpFaceCanvas('.cube-face.sign-post-side',  effectiveActiveSource, sx(4), sy(16), sx(4), sy(12));
+        // All 4 sides of the standing post!
+        drawSharpFaceCanvas('.cube-face.sign-post-front', effectiveActiveSource, sx(2), sy(16), sx(2), sy(14));
+        drawSharpFaceCanvas('.cube-face.sign-post-back',  effectiveActiveSource, sx(6), sy(16), sx(2), sy(14));
+        drawSharpFaceCanvas('.cube-face.sign-post-left',  effectiveActiveSource, sx(0), sy(16), sx(2), sy(14));
+        drawSharpFaceCanvas('.cube-face.sign-post-right', effectiveActiveSource, sx(4), sy(16), sx(2), sy(14));
         return;
       }
 
@@ -3402,6 +3555,40 @@
         hoverCtx.stroke();
       }
 
+      // 1b. Labeled UV-Zones for multi-part sheets (Hanging Sign, Sign, Shelf, etc.)
+      const currentItem = state.worklist[state.currentWorkIndex];
+      if (state.showUvZones && currentItem) {
+        const zones = [];
+        if (/hanging_sign/.test(currentItem.relPath) && w === 16 && h === 16) {
+          zones.push({ x: 0, y: 0, zw: 10, zh: 7, label: 'Querstrebe (Decke/Wand)', color: 'rgba(90, 155, 213, 0.78)' });
+          zones.push({ x: 10, y: 0, zw: 6, zh: 7, label: 'Ketten', color: 'rgba(217, 119, 87, 0.85)' });
+          zones.push({ x: 0, y: 7, zw: 9, zh: 7, label: 'Schild-Brett (Vorne/Hinten)', color: 'rgba(61, 153, 112, 0.85)' });
+        } else if (/_sign\.png$/i.test(currentItem.relPath) && currentItem.category === 'block' && w === 16 && h === 16) {
+          zones.push({ x: 0, y: 0, zw: 14, zh: 7, label: 'Schild-Brett (Vorne/Hinten)', color: 'rgba(61, 153, 112, 0.85)' });
+          zones.push({ x: 0, y: 7, zw: 4, zh: 9, label: 'Pfosten', color: 'rgba(217, 119, 87, 0.85)' });
+        } else if (/_shelf\.png$/i.test(currentItem.relPath) && w === 16 && h === 16) {
+          zones.push({ x: 0, y: 0, zw: 16, zh: 6, label: 'Regal-Oberseite / Rand', color: 'rgba(90, 155, 213, 0.78)' });
+          zones.push({ x: 0, y: 6, zw: 16, zh: 10, label: 'Regal-Front (Slots)', color: 'rgba(61, 153, 112, 0.85)' });
+        }
+
+        for (const z of zones) {
+          const rx = z.x * cellW, ry = z.y * cellH, rw = z.zw * cellW, rh = z.zh * cellH;
+          hoverCtx.save();
+          hoverCtx.setLineDash([5, 4]);
+          hoverCtx.strokeStyle = z.color;
+          hoverCtx.lineWidth = 2;
+          hoverCtx.strokeRect(rx + 2, ry + 2, rw - 4, rh - 4);
+          hoverCtx.setLineDash([]);
+          hoverCtx.font = 'bold 11px ui-monospace, SF Mono, monospace';
+          const tw = hoverCtx.measureText(z.label).width + 10;
+          hoverCtx.fillStyle = 'rgba(18, 19, 22, 0.86)';
+          hoverCtx.fillRect(rx + 4, ry + 4, Math.min(tw, rw - 8), 18);
+          hoverCtx.fillStyle = '#ECEEF2';
+          hoverCtx.fillText(z.label, rx + 9, ry + 16, rw - 16);
+          hoverCtx.restore();
+        }
+      }
+
       // 2. Pixel-by-Pixel Selection Highlight
       if (state.selectedPixels.size > 0) {
         hoverCtx.fillStyle = 'rgba(217, 119, 87, 0.25)';
@@ -3412,6 +3599,26 @@
           if (sx >= 0 && sx < w && sy >= 0 && sy < h) {
             hoverCtx.fillRect(sx * cellW, sy * cellH, cellW, cellH);
             hoverCtx.strokeRect(sx * cellW + 1, sy * cellH + 1, cellW - 2, cellH - 2);
+          }
+        }
+      }
+
+      // 2b. Interactive Paste Ghost Preview
+      if (state.pendingPaste) {
+        const pp = state.pendingPaste;
+        for (const p of pp.entry.pixels) {
+          const tx = p.x + pp.dx;
+          const ty = p.y + pp.dy;
+          if (tx >= 0 && tx < w && ty >= 0 && ty < h && p.a > 0) {
+            const [, , , curA] = getPixelRGBA(state.canvasBuffer, w, h, tx, ty);
+            const blocked = pp.protectExisting && curA > 0;
+            hoverCtx.fillStyle = blocked
+              ? 'rgba(201, 91, 91, 0.45)'
+              : `rgba(${p.r}, ${p.g}, ${p.b}, ${(p.a / 255) * 0.85})`;
+            hoverCtx.fillRect(tx * cellW, ty * cellH, cellW, cellH);
+            hoverCtx.strokeStyle = blocked ? '#C95B5B' : '#7CE0B3';
+            hoverCtx.lineWidth = 1.5;
+            hoverCtx.strokeRect(tx * cellW + 1, ty * cellH + 1, cellW - 2, cellH - 2);
           }
         }
       }
@@ -3794,6 +4001,7 @@
           }
           renderInspirationBar();
           renderPaletteGrids();
+          if (state.previewSource === '116') updateCrisp3DCubeAndTilePreview();
           if (e.target.closest('.insp-zoom-btn')) {
             openZoomInspector(m.dataUrl, `1.16 Inspiration: ${m.relPath}`, state.canvasW, state.canvasH);
           } else {
@@ -4256,13 +4464,22 @@
       e.preventDefault();
       dom.drawCanvas.setPointerCapture(e.pointerId);
 
+      const { x, y } = getCanvasPixelCoords(e.clientX, e.clientY);
+      if (state.pendingPaste) {
+        isDrawingStroke = true;
+        state.pendingPaste.dx = x - state.pendingPaste.minX;
+        state.pendingPaste.dy = y - state.pendingPaste.minY;
+        updatePasteBarUI();
+        drawGridAndSelectionOverlay(x, y);
+        return;
+      }
+
       if (state.activeTool !== 'select' && state.activeTool !== 'eyedropper') {
         preStrokeSnapshot = new Uint8ClampedArray(state.canvasBuffer);
         pushUndoSnapshot();
       }
 
       isDrawingStroke = true;
-      const { x, y } = getCanvasPixelCoords(e.clientX, e.clientY);
       lastPixelX = x; lastPixelY = y;
       dom.coordText.textContent = `X: ${x}  Y: ${y}`;
       applyToolAtPixel(x, y, true);
@@ -4277,6 +4494,14 @@
       if (!isDrawingStroke) return;
       if (e.pointerType === 'touch' && maxSimultaneousTouches >= 2) return;
       e.preventDefault();
+
+      if (state.pendingPaste) {
+        state.pendingPaste.dx = x - state.pendingPaste.minX;
+        state.pendingPaste.dy = y - state.pendingPaste.minY;
+        updatePasteBarUI();
+        drawGridAndSelectionOverlay(x, y);
+        return;
+      }
 
       if (x !== lastPixelX || y !== lastPixelY) {
         if (state.activeTool === 'pencil' || state.activeTool === 'eraser') {
@@ -4727,15 +4952,53 @@
       drawGridAndSelectionOverlay(-1, -1);
     });
 
+    dom.btnToggleUvZones.addEventListener('click', () => {
+      state.showUvZones = !state.showUvZones;
+      dom.btnToggleUvZones.textContent = state.showUvZones ? 'UV-Zonen: An' : 'UV-Zonen: Aus';
+      dom.btnToggleUvZones.classList.toggle('btn-accent', state.showUvZones);
+      drawGridAndSelectionOverlay(-1, -1);
+    });
+
+    dom.btnPasteResetOffset.addEventListener('click', () => {
+      if (!state.pendingPaste) return;
+      state.pendingPaste.dx = 0;
+      state.pendingPaste.dy = 0;
+      updatePasteBarUI();
+      drawGridAndSelectionOverlay(-1, -1);
+    });
+
+    dom.btnPasteProtectMode.addEventListener('click', () => {
+      if (!state.pendingPaste) return;
+      state.pendingPaste.protectExisting = !state.pendingPaste.protectExisting;
+      updatePasteBarUI();
+      drawGridAndSelectionOverlay(-1, -1);
+    });
+
+    dom.btnPasteConfirm.addEventListener('click', commitPendingPaste);
+    dom.btnPasteCancel.addEventListener('click', cancelPendingPaste);
+
     dom.btnResetCube.addEventListener('click', () => {
       state.cubeAutoSpin = !state.cubeAutoSpin;
-      if (!state.cubeAutoSpin) { state.cubeRotX = -26; state.cubeRotY = 38; updateCubeTransform(); }
+      if (!state.cubeAutoSpin) { state.cubeRotX = -24; state.cubeRotY = 36; updateCubeTransform(); }
       dom.btnResetCube.textContent = state.cubeAutoSpin ? 'Stopp' : 'Spin';
     });
 
     dom.btnToggleMultiFaceCube.addEventListener('click', () => {
       state.cubeMultiFace = !state.cubeMultiFace;
       dom.btnToggleMultiFaceCube.textContent = state.cubeMultiFace ? 'Mehrseitig' : '1-Textur';
+      updateCrisp3DCubeAndTilePreview();
+    });
+
+    dom.btnSignPlacement.addEventListener('click', () => {
+      const currentItem = state.worklist[state.currentWorkIndex];
+      const isHanging = currentItem && /hanging_sign/.test(currentItem.relPath);
+      if (isHanging) {
+        const order = ['wall', 'ceiling-v', 'ceiling-p'];
+        const next = order[(order.indexOf(state.signPlacement) + 1) % order.length];
+        state.signPlacement = next;
+      } else {
+        state.signPlacement = state.signPlacement === 'wall' ? 'ground' : 'wall';
+      }
       updateCrisp3DCubeAndTilePreview();
     });
 
@@ -4753,19 +5016,17 @@
       updateCrisp3DCubeAndTilePreview();
     });
 
-    dom.btnPreviewSrcAuto.addEventListener('click', () => {
-      state.previewSource = 'auto';
-      dom.btnPreviewSrcAuto.classList.add('active');
-      dom.btnPreviewSrcVanilla.classList.remove('active');
+    function setPreviewSource(src) {
+      state.previewSource = src;
+      dom.btnPreviewSrcAuto.classList.toggle('active', src === 'auto');
+      dom.btnPreviewSrcVanilla.classList.toggle('active', src === 'vanilla');
+      dom.btnPreviewSrc116.classList.toggle('active', src === '116');
       updateCrisp3DCubeAndTilePreview();
-    });
+    }
 
-    dom.btnPreviewSrcVanilla.addEventListener('click', () => {
-      state.previewSource = 'vanilla';
-      dom.btnPreviewSrcVanilla.classList.add('active');
-      dom.btnPreviewSrcAuto.classList.remove('active');
-      updateCrisp3DCubeAndTilePreview();
-    });
+    dom.btnPreviewSrcAuto.addEventListener('click', () => setPreviewSource('auto'));
+    dom.btnPreviewSrcVanilla.addEventListener('click', () => setPreviewSource('vanilla'));
+    dom.btnPreviewSrc116.addEventListener('click', () => setPreviewSource('116'));
 
     dom.categoryFilter.addEventListener('change', (e) => {
       state.filterCategory = e.target.value;
