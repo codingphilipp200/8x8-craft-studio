@@ -3419,60 +3419,78 @@
         else dom.sceneCube.classList.add('placement-wall');
 
         dom.previewStatusLabel.textContent = '3D Hängeschild' + srcSuffix;
-        const sx = (u) => Math.round((u / 32) * srcW);
-        const sy = (v) => Math.round((v / 32) * srcH);
-        drawSharpFaceCanvas('.cube-face.front',  effectiveActiveSource, sx(2), sy(16), sx(14), sy(10));
-        drawSharpFaceCanvas('.cube-face.back',   effectiveActiveSource, sx(2), sy(16), sx(14), sy(10));
-        drawSharpFaceCanvas('.cube-face.top',    effectiveActiveSource, sx(2), sy(14), sx(14), sy(2));
-        drawSharpFaceCanvas('.cube-face.bottom', effectiveActiveSource, sx(2), sy(26), sx(14), sy(2));
-        drawSharpFaceCanvas('.cube-face.left',   effectiveActiveSource, sx(0), sy(16), sx(2),  sy(10));
-        drawSharpFaceCanvas('.cube-face.right',  effectiveActiveSource, sx(16),sy(16), sx(2),  sy(10));
-        drawSharpFaceCanvas('.cube-face.hs-bar-front',  effectiveActiveSource, sx(0), sy(2), sx(16), sy(4));
-        drawSharpFaceCanvas('.cube-face.hs-bar-back',   effectiveActiveSource, sx(0), sy(2), sx(16), sy(4));
-        drawSharpFaceCanvas('.cube-face.hs-bar-top',    effectiveActiveSource, sx(0), sy(0), sx(16), sy(2));
-        drawSharpFaceCanvas('.cube-face.hs-bar-bottom', effectiveActiveSource, sx(0), sy(4), sx(16), sy(2));
+        // Exact Minecraft 0..16 UV space from template_hanging_sign_rot_0 / template_wall_hanging_sign
+        const uvx = (u) => (u / 16) * srcW;
+        const uvy = (v) => (v / 16) * srcH;
+        drawSharpFaceCanvas('.cube-face.front',  effectiveActiveSource, uvx(1),  uvy(8),  uvx(7), uvy(5));
+        drawSharpFaceCanvas('.cube-face.back',   effectiveActiveSource, uvx(9),  uvy(8),  uvx(7), uvy(5));
+        drawSharpFaceCanvas('.cube-face.top',    effectiveActiveSource, uvx(1),  uvy(7),  uvx(7), uvy(1));
+        drawSharpFaceCanvas('.cube-face.bottom', effectiveActiveSource, uvx(1),  uvy(13), uvx(7), uvy(1));
+        drawSharpFaceCanvas('.cube-face.left',   effectiveActiveSource, uvx(0),  uvy(8),  uvx(1), uvy(5));
+        drawSharpFaceCanvas('.cube-face.right',  effectiveActiveSource, uvx(8),  uvy(8),  uvx(1), uvy(5));
+        drawSharpFaceCanvas('.cube-face.hs-bar-front',  effectiveActiveSource, uvx(0), uvy(2),   uvx(8), uvy(1));
+        drawSharpFaceCanvas('.cube-face.hs-bar-back',   effectiveActiveSource, uvx(0), uvy(3.5), uvx(8), uvy(1));
+        drawSharpFaceCanvas('.cube-face.hs-bar-top',    effectiveActiveSource, uvx(0), uvy(0),   uvx(8), uvy(2));
+        drawSharpFaceCanvas('.cube-face.hs-bar-bottom', effectiveActiveSource, uvx(0), uvy(4.5), uvx(8), uvy(2));
 
         if (state.signPlacement === 'ceiling-v') {
-          drawSharpFaceCanvas('.cube-face.hs-chain-l', effectiveActiveSource, sx(25), sy(0), sx(7), sy(13));
+          drawSharpFaceCanvas('.cube-face.hs-chain-l', effectiveActiveSource, uvx(10), uvy(0), uvx(6), uvy(3));
+        } else if (state.signPlacement === 'ceiling-p') {
+          drawSharpFaceCanvas('.cube-face.hs-chain-l', effectiveActiveSource, uvx(11), uvy(3.5), uvx(1.5), uvy(3));
+          drawSharpFaceCanvas('.cube-face.hs-chain-r', effectiveActiveSource, uvx(11), uvy(3.5), uvx(1.5), uvy(3));
         } else {
-          // Parallel chains (unchained/unwarped 3x6 chain strip)
-          drawSharpFaceCanvas('.cube-face.hs-chain-l', effectiveActiveSource, sx(22), sy(0), sx(3), sy(6));
-          drawSharpFaceCanvas('.cube-face.hs-chain-r', effectiveActiveSource, sx(22), sy(0), sx(3), sy(6));
+          drawSharpFaceCanvas('.cube-face.hs-chain-l', effectiveActiveSource, uvx(14), uvy(4.5), uvx(1.5), uvy(1.5));
+          drawSharpFaceCanvas('.cube-face.hs-chain-r', effectiveActiveSource, uvx(14), uvy(4.5), uvx(1.5), uvy(1.5));
         }
         return;
       }
 
-      // 2. Authentic 3D Standing / Wall Sign (supports both 32x32 26.3 block sheet AND 64x32 1.16 entity/signs sheet!)
+      // 2. Authentic 3D Standing / Wall Sign (exact UVs from template_sign_rot_0.json & 1.16 entity/signs/)
       if (isStandingSign || is116EntitySign) {
         dom.sceneCube.classList.add('mode-sign');
         if (state.signPlacement === 'wall') dom.sceneCube.classList.add('placement-wall');
         dom.previewStatusLabel.textContent = (state.signPlacement === 'wall' ? '3D Wandschild' : '3D Schild') + srcSuffix;
-        const baseW = is116EntitySign ? 64 : 32;
-        const sx = (u) => Math.round((u / baseW) * srcW);
-        const sy = (v) => Math.round((v / 32) * srcH);
-        drawSharpFaceCanvas('.cube-face.front',  effectiveActiveSource, sx(2), sy(2),  sx(24), sy(12));
-        drawSharpFaceCanvas('.cube-face.back',   effectiveActiveSource, sx(28), sy(2), sx(24), sy(12));
-        drawSharpFaceCanvas('.cube-face.top',    effectiveActiveSource, sx(2), sy(0),  sx(24), sy(2));
-        drawSharpFaceCanvas('.cube-face.bottom', effectiveActiveSource, sx(26), sy(0), sx(24), sy(2));
-        drawSharpFaceCanvas('.cube-face.left',   effectiveActiveSource, sx(0), sy(2),  sx(2),  sy(12));
-        drawSharpFaceCanvas('.cube-face.right',  effectiveActiveSource, sx(26),sy(2),  sx(2),  sy(12));
-        // All 4 sides of the standing post!
-        drawSharpFaceCanvas('.cube-face.sign-post-front', effectiveActiveSource, sx(2), sy(16), sx(2), sy(14));
-        drawSharpFaceCanvas('.cube-face.sign-post-back',  effectiveActiveSource, sx(6), sy(16), sx(2), sy(14));
-        drawSharpFaceCanvas('.cube-face.sign-post-left',  effectiveActiveSource, sx(0), sy(16), sx(2), sy(14));
-        drawSharpFaceCanvas('.cube-face.sign-post-right', effectiveActiveSource, sx(4), sy(16), sx(2), sy(14));
+        const uvx = (u) => (u / 16) * srcW;
+        const uvy = (v) => (v / 16) * srcH;
+        if (is116EntitySign) {
+          // 1.16 entity/signs/*.png (64x32)
+          drawSharpFaceCanvas('.cube-face.front',  effectiveActiveSource, (2/64)*srcW,  (2/32)*srcH,  (24/64)*srcW, (12/32)*srcH);
+          drawSharpFaceCanvas('.cube-face.back',   effectiveActiveSource, (28/64)*srcW, (2/32)*srcH,  (24/64)*srcW, (12/32)*srcH);
+          drawSharpFaceCanvas('.cube-face.top',    effectiveActiveSource, (2/64)*srcW,  (0/32)*srcH,  (24/64)*srcW, (2/32)*srcH);
+          drawSharpFaceCanvas('.cube-face.bottom', effectiveActiveSource, (26/64)*srcW, (0/32)*srcH,  (24/64)*srcW, (2/32)*srcH);
+          drawSharpFaceCanvas('.cube-face.left',   effectiveActiveSource, (0/64)*srcW,  (2/32)*srcH,  (2/64)*srcW,  (12/32)*srcH);
+          drawSharpFaceCanvas('.cube-face.right',  effectiveActiveSource, (26/64)*srcW, (2/32)*srcH,  (2/64)*srcW,  (12/32)*srcH);
+          drawSharpFaceCanvas('.cube-face.sign-post-front', effectiveActiveSource, (2/64)*srcW, (16/32)*srcH, (2/64)*srcW, (14/32)*srcH);
+          drawSharpFaceCanvas('.cube-face.sign-post-back',  effectiveActiveSource, (6/64)*srcW, (16/32)*srcH, (2/64)*srcW, (14/32)*srcH);
+          drawSharpFaceCanvas('.cube-face.sign-post-left',  effectiveActiveSource, (0/64)*srcW, (16/32)*srcH, (2/64)*srcW, (14/32)*srcH);
+          drawSharpFaceCanvas('.cube-face.sign-post-right', effectiveActiveSource, (4/64)*srcW, (16/32)*srcH, (2/64)*srcW, (14/32)*srcH);
+        } else {
+          // 26.3 block/*_sign.png (exact UVs from template_sign_rot_0.json: post is at u=14..16!)
+          drawSharpFaceCanvas('.cube-face.front',  effectiveActiveSource, uvx(0),  uvy(1),  uvx(12), uvy(6));
+          drawSharpFaceCanvas('.cube-face.back',   effectiveActiveSource, uvx(0),  uvy(8),  uvx(12), uvy(6));
+          drawSharpFaceCanvas('.cube-face.top',    effectiveActiveSource, uvx(0),  uvy(0),  uvx(12), uvy(1));
+          drawSharpFaceCanvas('.cube-face.bottom', effectiveActiveSource, uvx(0),  uvy(14), uvx(12), uvy(1));
+          drawSharpFaceCanvas('.cube-face.left',   effectiveActiveSource, uvx(12), uvy(8),  uvx(1),  uvy(6));
+          drawSharpFaceCanvas('.cube-face.right',  effectiveActiveSource, uvx(12), uvy(1),  uvx(1),  uvy(6));
+          drawSharpFaceCanvas('.cube-face.sign-post-front', effectiveActiveSource, uvx(14), uvy(0), uvx(1), uvy(7));
+          drawSharpFaceCanvas('.cube-face.sign-post-back',  effectiveActiveSource, uvx(14), uvy(8), uvx(1), uvy(7));
+          drawSharpFaceCanvas('.cube-face.sign-post-left',  effectiveActiveSource, uvx(15), uvy(8), uvx(1), uvy(7));
+          drawSharpFaceCanvas('.cube-face.sign-post-right', effectiveActiveSource, uvx(15), uvy(0), uvx(1), uvy(7));
+        }
         return;
       }
 
-      // 3. Shelf UV sheet (full 100% edge-to-edge on front, top plank section on sides/top)
+      // 3. Shelf UV sheet (exact UVs from template_shelf_body.json)
       if (currentItem.category === 'block' && /_shelf\.png$/i.test(currentItem.relPath)) {
         dom.previewStatusLabel.textContent = '3D Regal' + srcSuffix;
-        drawSharpFaceCanvas('.cube-face.front',  effectiveActiveSource, 0, 0, srcW, srcH);
-        drawSharpFaceCanvas('.cube-face.back',   effectiveActiveSource, 0, 0, srcW, Math.round(srcH * 0.5));
-        drawSharpFaceCanvas('.cube-face.top',    effectiveActiveSource, 0, 0, srcW, Math.round(srcH * 0.5));
-        drawSharpFaceCanvas('.cube-face.bottom', effectiveActiveSource, 0, 0, srcW, Math.round(srcH * 0.5));
-        drawSharpFaceCanvas('.cube-face.left',   effectiveActiveSource, 0, 0, srcW, Math.round(srcH * 0.5));
-        drawSharpFaceCanvas('.cube-face.right',  effectiveActiveSource, 0, 0, srcW, Math.round(srcH * 0.5));
+        const uvx = (u) => (u / 16) * srcW;
+        const uvy = (v) => (v / 16) * srcH;
+        drawSharpFaceCanvas('.cube-face.front',  effectiveActiveSource, uvx(0),    uvy(0),   uvx(8),   uvy(8));
+        drawSharpFaceCanvas('.cube-face.back',   effectiveActiveSource, uvx(8),    uvy(0),   uvx(8),   uvy(8));
+        drawSharpFaceCanvas('.cube-face.top',    effectiveActiveSource, uvx(8),    uvy(3.5), uvx(8),   uvy(1.5));
+        drawSharpFaceCanvas('.cube-face.bottom', effectiveActiveSource, uvx(8),    uvy(4.5), uvx(8),   uvy(1.5));
+        drawSharpFaceCanvas('.cube-face.left',   effectiveActiveSource, uvx(14.5), uvy(0),   uvx(1.5), uvy(8));
+        drawSharpFaceCanvas('.cube-face.right',  effectiveActiveSource, uvx(8),    uvy(0),   uvx(1.5), uvy(8));
         return;
       }
 
@@ -3560,15 +3578,18 @@
       if (state.showUvZones && currentItem) {
         const zones = [];
         if (/hanging_sign/.test(currentItem.relPath) && w === 16 && h === 16) {
-          zones.push({ x: 0, y: 0, zw: 10, zh: 7, label: 'Querstrebe (Decke/Wand)', color: 'rgba(90, 155, 213, 0.78)' });
-          zones.push({ x: 10, y: 0, zw: 6, zh: 7, label: 'Ketten', color: 'rgba(217, 119, 87, 0.85)' });
-          zones.push({ x: 0, y: 7, zw: 9, zh: 7, label: 'Schild-Brett (Vorne/Hinten)', color: 'rgba(61, 153, 112, 0.85)' });
+          zones.push({ x: 0, y: 0, zw: 10, zh: 6.5, label: 'Querstrebe (Wand)', color: 'rgba(90, 155, 213, 0.85)' });
+          zones.push({ x: 10, y: 0, zw: 6, zh: 3.2, label: 'V-Kette (Decke)', color: 'rgba(217, 119, 87, 0.85)' });
+          zones.push({ x: 10.5, y: 3.2, zw: 5.5, zh: 3.8, label: 'Ketten (II/Wand)', color: 'rgba(212, 155, 75, 0.85)' });
+          zones.push({ x: 0, y: 7, zw: 9, zh: 7, label: 'Brett Vorne', color: 'rgba(61, 153, 112, 0.85)' });
+          zones.push({ x: 9, y: 8, zw: 7, zh: 5, label: 'Brett Hinten', color: 'rgba(61, 153, 112, 0.72)' });
         } else if (/_sign\.png$/i.test(currentItem.relPath) && currentItem.category === 'block' && w === 16 && h === 16) {
-          zones.push({ x: 0, y: 0, zw: 14, zh: 7, label: 'Schild-Brett (Vorne/Hinten)', color: 'rgba(61, 153, 112, 0.85)' });
-          zones.push({ x: 0, y: 7, zw: 4, zh: 9, label: 'Pfosten', color: 'rgba(217, 119, 87, 0.85)' });
+          zones.push({ x: 0, y: 0, zw: 13, zh: 7, label: 'Brett Vorne', color: 'rgba(61, 153, 112, 0.85)' });
+          zones.push({ x: 0, y: 7, zw: 13, zh: 8, label: 'Brett Hinten', color: 'rgba(61, 153, 112, 0.72)' });
+          zones.push({ x: 14, y: 0, zw: 2, zh: 16, label: 'Pfosten', color: 'rgba(217, 119, 87, 0.88)' });
         } else if (/_shelf\.png$/i.test(currentItem.relPath) && w === 16 && h === 16) {
-          zones.push({ x: 0, y: 0, zw: 16, zh: 6, label: 'Regal-Oberseite / Rand', color: 'rgba(90, 155, 213, 0.78)' });
-          zones.push({ x: 0, y: 6, zw: 16, zh: 10, label: 'Regal-Front (Slots)', color: 'rgba(61, 153, 112, 0.85)' });
+          zones.push({ x: 0, y: 0, zw: 8, zh: 8, label: 'Regal-Front', color: 'rgba(61, 153, 112, 0.85)' });
+          zones.push({ x: 8, y: 0, zw: 8, zh: 8, label: 'Rückseite/Ränder', color: 'rgba(90, 155, 213, 0.85)' });
         }
 
         for (const z of zones) {
