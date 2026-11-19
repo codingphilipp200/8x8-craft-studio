@@ -167,12 +167,60 @@
     }
 
     .filter-cluster {
+      position: relative;
       display: flex;
       align-items: center;
       gap: 6px;
       flex: 1;
-      max-width: 460px;
+      max-width: 480px;
       min-width: 0;
+    }
+
+    .search-wrap {
+      position: relative;
+      flex: 1;
+      display: flex;
+      min-width: 120px;
+    }
+
+    .search-dropdown {
+      position: absolute;
+      top: calc(100% + 6px);
+      left: 0;
+      width: 380px;
+      max-width: 90vw;
+      max-height: 380px;
+      overflow-y: auto;
+      background: var(--bg-panel);
+      border: 1px solid var(--border-strong);
+      border-radius: var(--radius-md);
+      box-shadow: 0 20px 50px rgba(0, 0, 0, 0.75);
+      z-index: 120;
+      padding: 6px;
+      display: flex;
+      flex-direction: column;
+      gap: 3px;
+    }
+
+    .search-dropdown.hidden { display: none; }
+
+    .search-hit {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 8px;
+      padding: 7px 9px;
+      border-radius: var(--radius-sm);
+      background: transparent;
+      border: 1px solid transparent;
+      color: var(--text-primary);
+      cursor: pointer;
+      text-align: left;
+    }
+
+    .search-hit:hover, .search-hit.active {
+      background: var(--accent-soft);
+      border-color: var(--accent-border);
     }
 
     .ui-select, .ui-input {
@@ -319,6 +367,8 @@
     }
 
     .insp-list {
+      flex: 1;
+      min-width: 0;
       display: flex;
       align-items: center;
       gap: 6px;
@@ -495,42 +545,73 @@
       display: inline-block;
     }
 
-    /* Previews Row inside Left Panel */
-    .preview-split {
-      display: grid;
-      grid-template-columns: 1fr 1fr;
-      gap: 8px;
+    /* Unified Large Preview Stage & Segmented Controls */
+    .seg-group {
+      display: inline-flex;
+      background: var(--bg-elevated);
+      border: 1px solid var(--border-hairline);
+      border-radius: var(--radius-sm);
+      padding: 2px;
+      gap: 2px;
+    }
+
+    .seg-btn {
+      min-height: 28px;
+      padding: 0 9px;
+      border: none;
+      border-radius: 4px;
+      background: transparent;
+      color: var(--text-secondary);
+      font-size: 11px;
+      font-weight: 600;
+      cursor: pointer;
+    }
+
+    .seg-btn.active {
+      background: var(--accent);
+      color: #121316;
+    }
+
+    .preview-stage-wrap {
+      width: 100%;
+      height: 174px;
+      border-radius: var(--radius-sm);
+      border: 1px solid var(--border-hairline);
+      overflow: hidden;
+      position: relative;
+      display: flex;
+      align-items: center;
+      justify-content: center;
     }
 
     .mini-stage {
       width: 100%;
-      aspect-ratio: 1 / 1;
-      border-radius: var(--radius-sm);
-      border: 1px solid var(--border-hairline);
+      height: 100%;
       display: flex;
       align-items: center;
       justify-content: center;
-      overflow: hidden;
-      position: relative;
+      cursor: zoom-in;
+    }
+
+    .mini-stage.hidden, .cube-viewport.hidden {
+      display: none;
     }
 
     #tileCanvas {
-      width: 100%;
-      height: 100%;
+      width: 164px;
+      height: 164px;
       object-fit: contain;
     }
 
-    /* Crisp Canvas-based 3D Cube */
+    /* Crisp Canvas-based 3D Viewport (supports Cube, Hanging Sign, Standing Sign) */
     .cube-viewport {
       width: 100%;
-      aspect-ratio: 1 / 1;
-      border-radius: var(--radius-sm);
-      border: 1px solid var(--border-hairline);
-      background: radial-gradient(circle at 50% 35%, #23272E 0%, #121316 78%);
+      height: 100%;
+      background: radial-gradient(circle at 50% 35%, #23272E 0%, #121316 80%);
       display: flex;
       align-items: center;
       justify-content: center;
-      perspective: 360px;
+      perspective: 420px;
       overflow: hidden;
       touch-action: none;
       cursor: grab;
@@ -538,28 +619,54 @@
     }
 
     .scene-cube {
-      width: 72px;
-      height: 72px;
+      width: 88px;
+      height: 88px;
       position: relative;
       transform-style: preserve-3d;
-      transform: rotateX(-26deg) rotateY(38deg);
+      transform: rotateX(-24deg) rotateY(36deg);
     }
 
     .cube-face {
       position: absolute;
-      width: 72px;
-      height: 72px;
+      width: 88px;
+      height: 88px;
       backface-visibility: hidden;
-      border: 1px solid rgba(255, 255, 255, 0.1);
+      border: 1px solid rgba(255, 255, 255, 0.08);
       display: block;
     }
 
-    .cube-face.front  { transform: rotateY(  0deg) translateZ(36px); filter: brightness(0.96); }
-    .cube-face.back   { transform: rotateY(180deg) translateZ(36px); filter: brightness(0.72); }
-    .cube-face.right  { transform: rotateY( 90deg) translateZ(36px); filter: brightness(0.82); }
-    .cube-face.left   { transform: rotateY(-90deg) translateZ(36px); filter: brightness(0.88); }
-    .cube-face.top    { transform: rotateX( 90deg) translateZ(36px); filter: brightness(1.10); }
-    .cube-face.bottom { transform: rotateX(-90deg) translateZ(36px); filter: brightness(0.58); }
+    .cube-face.front  { transform: rotateY(  0deg) translateZ(44px); filter: brightness(0.96); }
+    .cube-face.back   { transform: rotateY(180deg) translateZ(44px); filter: brightness(0.74); }
+    .cube-face.right  { transform: rotateY( 90deg) translateZ(44px); filter: brightness(0.84); }
+    .cube-face.left   { transform: rotateY(-90deg) translateZ(44px); filter: brightness(0.88); }
+    .cube-face.top    { transform: rotateX( 90deg) translateZ(44px); filter: brightness(1.10); }
+    .cube-face.bottom { transform: rotateX(-90deg) translateZ(44px); filter: brightness(0.58); }
+
+    /* Minecraft 3D Hanging Sign Geometry (Board + Chains + Crossbar) */
+    .scene-cube.mode-hanging-sign .cube-face.front  { width: 88px; height: 62px; top: 26px; left: 0; transform: rotateY(  0deg) translateZ(8px); }
+    .scene-cube.mode-hanging-sign .cube-face.back   { width: 88px; height: 62px; top: 26px; left: 0; transform: rotateY(180deg) translateZ(8px); }
+    .scene-cube.mode-hanging-sign .cube-face.right  { width: 16px; height: 62px; top: 26px; left: 36px; transform: rotateY( 90deg) translateZ(44px); }
+    .scene-cube.mode-hanging-sign .cube-face.left   { width: 16px; height: 62px; top: 26px; left: 36px; transform: rotateY(-90deg) translateZ(44px); }
+    .scene-cube.mode-hanging-sign .cube-face.top    { width: 88px; height: 16px; top: 18px; left: 0; transform: rotateX( 90deg) translateZ(0px); }
+    .scene-cube.mode-hanging-sign .cube-face.bottom { width: 88px; height: 16px; top: 80px; left: 0; transform: rotateX(-90deg) translateZ(0px); }
+
+    .hs-extra { display: none; position: absolute; backface-visibility: visible; border: none; }
+    .scene-cube.mode-hanging-sign .hs-extra { display: block; }
+    .cube-face.hs-bar-front { width: 96px; height: 14px; top: -8px; left: -4px; transform: rotateY(0deg) translateZ(8px); }
+    .cube-face.hs-bar-top   { width: 96px; height: 16px; top: -16px; left: -4px; transform: rotateX(90deg) translateZ(0px); }
+    .cube-face.hs-chains    { width: 78px; height: 24px; top: 4px; left: 5px; transform: rotateY(0deg) translateZ(0px); }
+
+    /* Minecraft 3D Standing Sign Geometry (Wide Board + Center Post) */
+    .scene-cube.mode-sign .cube-face.front  { width: 96px; height: 48px; top: 6px; left: -4px; transform: rotateY(  0deg) translateZ(6px); }
+    .scene-cube.mode-sign .cube-face.back   { width: 96px; height: 48px; top: 6px; left: -4px; transform: rotateY(180deg) translateZ(6px); }
+    .scene-cube.mode-sign .cube-face.right  { width: 12px; height: 48px; top: 6px; left: 38px; transform: rotateY( 90deg) translateZ(48px); }
+    .scene-cube.mode-sign .cube-face.left   { width: 12px; height: 48px; top: 6px; left: 38px; transform: rotateY(-90deg) translateZ(48px); }
+    .scene-cube.mode-sign .cube-face.top    { width: 96px; height: 12px; top: 0px; left: -4px; transform: rotateX( 90deg) translateZ(0px); }
+    .scene-cube.mode-sign .cube-face.bottom { width: 96px; height: 12px; top: 48px; left: -4px; transform: rotateX(-90deg) translateZ(0px); }
+    .sign-post-extra { display: none; position: absolute; backface-visibility: visible; border: none; }
+    .scene-cube.mode-sign .sign-post-extra { display: block; }
+    .cube-face.sign-post-front { width: 12px; height: 42px; top: 54px; left: 38px; transform: rotateY(0deg) translateZ(6px); }
+    .cube-face.sign-post-side  { width: 12px; height: 42px; top: 54px; left: 38px; transform: rotateY(90deg) translateZ(6px); }
 
     /* Center Stage */
     .center-stage {
@@ -1223,7 +1330,10 @@
           <option value="done">Fertig</option>
           <option value="skipped">Übersprungen</option>
         </select>
-        <input type="search" class="ui-input mono" id="searchInput" placeholder="Typ / Name suchen…" />
+        <div class="search-wrap">
+          <input type="search" class="ui-input mono" id="searchInput" placeholder="Suche (z. B. sign, acacia, copper)…" autocomplete="off" />
+          <div class="search-dropdown hidden" id="searchDropdown"></div>
+        </div>
       </div>
 
       <div class="nav-cluster">
@@ -1299,19 +1409,20 @@
           </div>
         </div>
 
-        <!-- Context & 3D Block Preview -->
+        <!-- Context & 3D / 2D Preview -->
         <div class="panel-card">
           <div class="card-header">
-            <span class="card-title" id="previewCardTitle">Vorschau &amp; 3D-Block</span>
-            <div style="display:flex; gap:4px;">
-              <button class="btn btn-ghost" id="btnToggleMultiFaceCube" style="min-height:22px; padding:0 5px; font-size:10px;">3D: Mehrseitig</button>
-              <button class="btn btn-ghost" id="btnResetCube" style="min-height:22px; padding:0 5px; font-size:10px;">Spin</button>
+            <div class="seg-group" title="Zwischen 3D-Minecraft-Ansicht und 2D-Muster umschalten">
+              <button class="seg-btn active" id="btnPreviewMode3D">3D</button>
+              <button class="seg-btn" id="btnPreviewMode2D">2D</button>
+            </div>
+            <div class="seg-group" title="Meine gezeichnete Textur vs. Vanilla-Vorlage im 3D/2D-Modell">
+              <button class="seg-btn active" id="btnPreviewSrcAuto">Meine</button>
+              <button class="seg-btn" id="btnPreviewSrcVanilla">Vanilla</button>
             </div>
           </div>
-          <div class="preview-split">
-            <div class="mini-stage checkerboard" id="tilePreviewStage" title="Kachel- / Slot-Vorschau (Antippen für Zoom)">
-              <canvas id="tileCanvas" width="96" height="96" class="pixelated"></canvas>
-            </div>
+
+          <div class="preview-stage-wrap">
             <div class="cube-viewport" id="cubeViewport" title="Mit Finger oder Apple Pencil drehen">
               <div class="scene-cube" id="sceneCube">
                 <canvas width="128" height="128" class="cube-face front pixelated"></canvas>
@@ -1320,12 +1431,25 @@
                 <canvas width="128" height="128" class="cube-face left pixelated"></canvas>
                 <canvas width="128" height="128" class="cube-face top pixelated"></canvas>
                 <canvas width="128" height="128" class="cube-face bottom pixelated"></canvas>
+                <!-- Extra 3D geometry for Hanging Signs & Standing Signs -->
+                <canvas width="128" height="32" class="cube-face hs-extra hs-bar-front pixelated"></canvas>
+                <canvas width="128" height="32" class="cube-face hs-extra hs-bar-top pixelated"></canvas>
+                <canvas width="128" height="48" class="cube-face hs-extra hs-chains pixelated"></canvas>
+                <canvas width="32" height="64" class="cube-face sign-post-extra sign-post-front pixelated"></canvas>
+                <canvas width="32" height="64" class="cube-face sign-post-extra sign-post-side pixelated"></canvas>
               </div>
             </div>
+            <div class="mini-stage checkerboard hidden" id="tilePreviewStage" title="2D-Muster / Inventar-Vorschau (Antippen für Zoom)">
+              <canvas id="tileCanvas" width="160" height="160" class="pixelated"></canvas>
+            </div>
           </div>
+
           <div class="ref-footer">
-            <span id="leftPreviewLabel">2×2 Nahtlos-Check</span>
-            <span id="rightPreviewLabel">Scharfer 3D-Block</span>
+            <span id="previewStatusLabel">3D-Modell (Drag zum Drehen)</span>
+            <div style="display:flex; gap:4px;">
+              <button class="btn btn-ghost" id="btnToggleMultiFaceCube" style="min-height:22px; padding:0 5px; font-size:10px;">Mehrseitig</button>
+              <button class="btn btn-ghost" id="btnResetCube" style="min-height:22px; padding:0 5px; font-size:10px;">Spin</button>
+            </div>
           </div>
         </div>
 
@@ -2135,11 +2259,13 @@
       catalogTypeFilter: 'all',
       catalogSearch: '',
 
-      // 3D Cube State
-      cubeRotX: -26,
-      cubeRotY: 38,
+      // 3D / 2D Preview State
+      cubeRotX: -24,
+      cubeRotY: 36,
       cubeAutoSpin: false,
-      cubeMultiFace: true
+      cubeMultiFace: true,
+      previewMode: '3d', // '3d' | '2d'
+      previewSource: 'auto' // 'auto' (Meine Textur, falls gezeichnet, sonst Vanilla) | 'vanilla'
     };
     /*************************************************************************
      * 4. DOM REFERENCES & IMAGE HELPERS
@@ -2151,6 +2277,7 @@
       categoryFilter: document.getElementById('categoryFilter'),
       statusFilter: document.getElementById('statusFilter'),
       searchInput: document.getElementById('searchInput'),
+      searchDropdown: document.getElementById('searchDropdown'),
       btnPrev: document.getElementById('btnPrev'),
       btnSkip: document.getElementById('btnSkip'),
       btnDoneNext: document.getElementById('btnDoneNext'),
@@ -2173,15 +2300,17 @@
       refPickedHex: document.getElementById('refPickedHex'),
       btnToggleVanillaOverlay: document.getElementById('btnToggleVanillaOverlay'),
       overlayOpacitySlider: document.getElementById('overlayOpacitySlider'),
-      previewCardTitle: document.getElementById('previewCardTitle'),
+      btnPreviewMode3D: document.getElementById('btnPreviewMode3D'),
+      btnPreviewMode2D: document.getElementById('btnPreviewMode2D'),
+      btnPreviewSrcAuto: document.getElementById('btnPreviewSrcAuto'),
+      btnPreviewSrcVanilla: document.getElementById('btnPreviewSrcVanilla'),
+      previewStatusLabel: document.getElementById('previewStatusLabel'),
       tilePreviewStage: document.getElementById('tilePreviewStage'),
       tileCanvas: document.getElementById('tileCanvas'),
       cubeViewport: document.getElementById('cubeViewport'),
       sceneCube: document.getElementById('sceneCube'),
       btnResetCube: document.getElementById('btnResetCube'),
       btnToggleMultiFaceCube: document.getElementById('btnToggleMultiFaceCube'),
-      leftPreviewLabel: document.getElementById('leftPreviewLabel'),
-      rightPreviewLabel: document.getElementById('rightPreviewLabel'),
       btnDownloadSinglePng: document.getElementById('btnDownloadSinglePng'),
       btnDownloadSingleLabel: document.getElementById('btnDownloadSingleLabel'),
       btnExportBackupJson: document.getElementById('btnExportBackupJson'),
@@ -2613,13 +2742,47 @@
       return base.split(/[_\-\s]+/).filter(Boolean);
     }
 
+    // Tolerant multi-token + subsequence matcher (e.g. "sign" matches "acacia_hanging_sign", "gui/signs/oak", "acacia sign", "hangign")
+    function tolerantMatchScore(query, haystack) {
+      const q = (query || '').trim().toLowerCase().replace(/[_\-\/]+/g, ' ');
+      if (!q) return 1;
+      const h = (haystack || '').toLowerCase().replace(/[_\-\/\.]+/g, ' ');
+      const tokens = q.split(/\s+/).filter(Boolean);
+      let score = 0;
+
+      for (const tok of tokens) {
+        if (h.includes(tok)) {
+          score += 20;
+          if (h.split(' ').some(w => w.startsWith(tok))) score += 10;
+        } else {
+          // Fuzzy subsequence / 1-typo tolerance for tokens >= 3 chars
+          if (tok.length < 3) return 0;
+          let ti = 0;
+          for (let hi = 0; hi < h.length && ti < tok.length; hi++) {
+            if (h[hi] === tok[ti]) ti++;
+          }
+          if (ti === tok.length) {
+            score += 6;
+          } else {
+            return 0;
+          }
+        }
+      }
+      return score;
+    }
+
     function getInspirationMatches(targetItem, customQuery = '') {
       const all116 = [...state.textures116.values()];
       if (all116.length === 0) return [];
 
       const q = customQuery.trim().toLowerCase();
       if (q) {
-        return all116.filter(item => item.relPath.toLowerCase().includes(q)).slice(0, 14);
+        return all116
+          .map(item => ({ item, s: tolerantMatchScore(q, item.relPath) }))
+          .filter(x => x.s > 0)
+          .sort((a, b) => b.s - a.s || a.item.relPath.localeCompare(b.item.relPath))
+          .slice(0, 14)
+          .map(x => x.item);
       }
       if (!targetItem) return all116.slice(0, 6);
 
@@ -3006,16 +3169,18 @@
     /*************************************************************************
      * 8. CRISP 3D BLOCK & CONTEXT PREVIEW RENDERER
      *************************************************************************/
-    // Draws an image or canvas onto a 128x128 cube-face canvas with nearest-neighbor sharp pixels
+    // Draws an image or canvas onto a cube-face canvas with nearest-neighbor sharp pixels
     function drawSharpFaceCanvas(faceSelector, sourceCanvasOrImg, sx = 0, sy = 0, sw = 0, sh = 0) {
       const faceCanvas = dom.sceneCube.querySelector(faceSelector);
       if (!faceCanvas || !sourceCanvasOrImg) return;
+      const fw = faceCanvas.width || 128;
+      const fh = faceCanvas.height || 128;
       const ctx = faceCanvas.getContext('2d');
-      ctx.clearRect(0, 0, 128, 128);
+      ctx.clearRect(0, 0, fw, fh);
       ctx.imageSmoothingEnabled = false;
       const w = sw || sourceCanvasOrImg.width || sourceCanvasOrImg.naturalWidth || 8;
       const h = sh || sourceCanvasOrImg.height || sourceCanvasOrImg.naturalHeight || 8;
-      ctx.drawImage(sourceCanvasOrImg, sx, sy, w, h, 0, 0, 128, 128);
+      ctx.drawImage(sourceCanvasOrImg, sx, sy, w, h, 0, 0, fw, fh);
     }
 
     const imageCache = new Map();
@@ -3032,15 +3197,14 @@
     }
 
     // Resolves the best texture canvas/image for any block face path (e.g. "block/crafter_top.png")
-    // Checks: 1. Active Canvas -> 2. Drawn Worklist Item -> 3. Existing 1.16 Pack -> 4. Vanilla 26.3 Entry
     async function resolveBlockFaceImage(relPath, currentItem) {
       if (!relPath) return null;
-      if (currentItem && relPath === currentItem.relPath && hasVisiblePixels(state.canvasBuffer)) {
+      if (currentItem && relPath === currentItem.relPath && state.previewSource !== 'vanilla' && hasVisiblePixels(state.canvasBuffer)) {
         return dom.drawCanvas;
       }
       const wItem = state.worklistByPath.get(relPath);
       if (wItem) {
-        if (hasVisiblePixels(wItem.drawnPixels)) {
+        if (state.previewSource !== 'vanilla' && hasVisiblePixels(wItem.drawnPixels)) {
           const url = bufferToDataUrl(wItem.drawnPixels, wItem.targetW, wItem.targetH);
           return await getCachedImage(url);
         }
@@ -3067,69 +3231,102 @@
       const currentItem = state.worklist[state.currentWorkIndex];
       const w = state.canvasW, h = state.canvasH;
       const activeCanvasHasPixels = hasVisiblePixels(state.canvasBuffer);
-      const effectiveActiveSource = activeCanvasHasPixels ? dom.drawCanvas : dom.vanillaOverlayCanvas;
+      const useVanilla = state.previewSource === 'vanilla' || !activeCanvasHasPixels;
+      const effectiveActiveSource = useVanilla ? dom.refCanvas : dom.drawCanvas;
+      const srcW = effectiveActiveSource.width || w;
+      const srcH = effectiveActiveSource.height || h;
 
-      // A. Left Preview Stage (Tile Preview for standard blocks vs Hotbar/Model Preview for Items & UV sheets)
-      tileCtx.clearRect(0, 0, 96, 96);
+      // Toggle 3D vs 2D stage visibility
+      dom.cubeViewport.classList.toggle('hidden', state.previewMode !== '3d');
+      dom.tilePreviewStage.classList.toggle('hidden', state.previewMode !== '2d');
+
+      // A. 2D Pattern / Slot Preview (160x160)
+      tileCtx.clearRect(0, 0, 160, 160);
       tileCtx.imageSmoothingEnabled = false;
-
       const isStandardBlockTile = currentItem && currentItem.category === 'block' && w === 8 && h === 8 && !/sign|shelf|door|camp|lantern|candle|kelp|grass|sapling|flower/.test(currentItem.relPath);
 
       if (isStandardBlockTile) {
-        dom.leftPreviewLabel.textContent = '2×2 Nahtlos-Vorschau';
-        // 2x2 large crisp tiling (each tile 48x48 px inside 96x96 canvas) so individual pixels are 6x6 px and super clear!
         for (let ty = 0; ty < 2; ty++) {
           for (let tx = 0; tx < 2; tx++) {
-            tileCtx.drawImage(effectiveActiveSource, 0, 0, w, h, tx * 48, ty * 48, 48, 48);
+            tileCtx.drawImage(effectiveActiveSource, 0, 0, srcW, srcH, tx * 80, ty * 80, 80, 80);
           }
         }
-        // Subtle seam crosshair
         tileCtx.strokeStyle = 'rgba(255, 255, 255, 0.16)';
         tileCtx.lineWidth = 1;
         tileCtx.beginPath();
-        tileCtx.moveTo(48.5, 0); tileCtx.lineTo(48.5, 96);
-        tileCtx.moveTo(0, 48.5); tileCtx.lineTo(96, 48.5);
+        tileCtx.moveTo(80.5, 0); tileCtx.lineTo(80.5, 160);
+        tileCtx.moveTo(0, 80.5); tileCtx.lineTo(160, 80.5);
         tileCtx.stroke();
       } else {
-        // Hotbar / Inventory Slot & 1:1 Aspect Preview
-        dom.leftPreviewLabel.textContent = currentItem && currentItem.category === 'item'
-          ? 'Inventar-Slot (8×8)'
-          : `Modell-Bogen (${w}×${h})`;
-        // Draw authentic dark Minecraft inventory slot border
-        tileCtx.fillStyle = '#1E2025';
-        tileCtx.fillRect(8, 8, 80, 80);
-        tileCtx.strokeStyle = '#383C46';
-        tileCtx.lineWidth = 2;
-        tileCtx.strokeRect(9, 9, 78, 78);
-
-        const scale = Math.min(68 / w, 68 / h);
-        const dw = Math.round(w * scale);
-        const dh = Math.round(h * scale);
-        const dx = Math.round((96 - dw) / 2);
-        const dy = Math.round((96 - dh) / 2);
-        tileCtx.drawImage(effectiveActiveSource, 0, 0, w, h, dx, dy, dw, dh);
+        const scale = Math.min(144 / srcW, 144 / srcH);
+        const dw = Math.round(srcW * scale);
+        const dh = Math.round(srcH * scale);
+        const dx = Math.round((160 - dw) / 2);
+        const dy = Math.round((160 - dh) / 2);
+        tileCtx.drawImage(effectiveActiveSource, 0, 0, srcW, srcH, dx, dy, dw, dh);
       }
 
-      // B. Right 3D Cube Stage (Crisp 128x128 Canvas Faces + True Multi-Face Resolution)
-      if (!currentItem) return;
+      if (state.previewMode === '2d') {
+        dom.previewStatusLabel.textContent = (isStandardBlockTile ? '2×2 Nahtlos-Muster' : `2D-Muster (${srcW}×${srcH})`) + (useVanilla ? ' · Vanilla' : ' · Meine');
+        return;
+      }
 
-      // Special case: 32x32 -> 16x16 UV sheet blocks (like *_hanging_sign, *_sign, *_shelf)
-      if (currentItem.category === 'block' && w === 16 && h === 16 && /sign|shelf/.test(currentItem.relPath)) {
-        dom.rightPreviewLabel.textContent = '3D Schild-/Brett-Ausschnitt';
-        // On a 16x16 sign/hanging_sign UV sheet, the main wooden board face is in the top-left/middle plank region (0, 1, 8, 6)
-        drawSharpFaceCanvas('.cube-face.front', effectiveActiveSource, 1, 7, 10, 6);
-        drawSharpFaceCanvas('.cube-face.back', effectiveActiveSource, 1, 7, 10, 6);
-        drawSharpFaceCanvas('.cube-face.top', effectiveActiveSource, 1, 1, 8, 6);
-        drawSharpFaceCanvas('.cube-face.bottom', effectiveActiveSource, 1, 1, 8, 6);
-        drawSharpFaceCanvas('.cube-face.left', effectiveActiveSource, 0, 7, 8, 8);
-        drawSharpFaceCanvas('.cube-face.right', effectiveActiveSource, 0, 7, 8, 8);
+      // B. 3D Minecraft Model Preview
+      dom.sceneCube.classList.remove('mode-hanging-sign', 'mode-sign');
+      if (!currentItem) return;
+      const srcSuffix = useVanilla ? ' (Vanilla)' : ' (Meine)';
+
+      // 1. Authentic 3D Hanging Sign (board + crossbar + chains mapped from Minecraft UV layout)
+      if (currentItem.category === 'block' && /hanging_sign/.test(currentItem.relPath)) {
+        dom.sceneCube.classList.add('mode-hanging-sign');
+        dom.previewStatusLabel.textContent = '3D Hängeschild' + srcSuffix;
+        const sx = (u) => Math.round((u / 32) * srcW);
+        const sy = (v) => Math.round((v / 32) * srcH);
+        drawSharpFaceCanvas('.cube-face.front',  effectiveActiveSource, sx(2), sy(16), sx(14), sy(10));
+        drawSharpFaceCanvas('.cube-face.back',   effectiveActiveSource, sx(2), sy(16), sx(14), sy(10));
+        drawSharpFaceCanvas('.cube-face.top',    effectiveActiveSource, sx(2), sy(14), sx(14), sy(2));
+        drawSharpFaceCanvas('.cube-face.bottom', effectiveActiveSource, sx(2), sy(26), sx(14), sy(2));
+        drawSharpFaceCanvas('.cube-face.left',   effectiveActiveSource, sx(0), sy(16), sx(2),  sy(10));
+        drawSharpFaceCanvas('.cube-face.right',  effectiveActiveSource, sx(16),sy(16), sx(2),  sy(10));
+        drawSharpFaceCanvas('.cube-face.hs-bar-front', effectiveActiveSource, sx(0), sy(2), sx(16), sy(4));
+        drawSharpFaceCanvas('.cube-face.hs-bar-top',   effectiveActiveSource, sx(0), sy(0), sx(16), sy(2));
+        drawSharpFaceCanvas('.cube-face.hs-chains',    effectiveActiveSource, sx(22), sy(0), sx(10), sy(13));
+        return;
+      }
+
+      // 2. Authentic 3D Standing Sign (wide board + post)
+      if (currentItem.category === 'block' && /_sign\.png$/i.test(currentItem.relPath)) {
+        dom.sceneCube.classList.add('mode-sign');
+        dom.previewStatusLabel.textContent = '3D Schild' + srcSuffix;
+        const sx = (u) => Math.round((u / 32) * srcW);
+        const sy = (v) => Math.round((v / 32) * srcH);
+        drawSharpFaceCanvas('.cube-face.front',  effectiveActiveSource, sx(2), sy(2),  sx(24), sy(12));
+        drawSharpFaceCanvas('.cube-face.back',   effectiveActiveSource, sx(2), sy(16), sx(24), sy(12));
+        drawSharpFaceCanvas('.cube-face.top',    effectiveActiveSource, sx(2), sy(0),  sx(24), sy(2));
+        drawSharpFaceCanvas('.cube-face.bottom', effectiveActiveSource, sx(2), sy(14), sx(24), sy(2));
+        drawSharpFaceCanvas('.cube-face.left',   effectiveActiveSource, sx(0), sy(2),  sx(2),  sy(12));
+        drawSharpFaceCanvas('.cube-face.right',  effectiveActiveSource, sx(26),sy(2),  sx(2),  sy(12));
+        drawSharpFaceCanvas('.cube-face.sign-post-front', effectiveActiveSource, sx(0), sy(16), sx(4), sy(12));
+        drawSharpFaceCanvas('.cube-face.sign-post-side',  effectiveActiveSource, sx(4), sy(16), sx(4), sy(12));
+        return;
+      }
+
+      // 3. Shelf UV sheet (full 100% edge-to-edge on front, top plank section on sides/top)
+      if (currentItem.category === 'block' && /_shelf\.png$/i.test(currentItem.relPath)) {
+        dom.previewStatusLabel.textContent = '3D Regal' + srcSuffix;
+        drawSharpFaceCanvas('.cube-face.front',  effectiveActiveSource, 0, 0, srcW, srcH);
+        drawSharpFaceCanvas('.cube-face.back',   effectiveActiveSource, 0, 0, srcW, Math.round(srcH * 0.5));
+        drawSharpFaceCanvas('.cube-face.top',    effectiveActiveSource, 0, 0, srcW, Math.round(srcH * 0.5));
+        drawSharpFaceCanvas('.cube-face.bottom', effectiveActiveSource, 0, 0, srcW, Math.round(srcH * 0.5));
+        drawSharpFaceCanvas('.cube-face.left',   effectiveActiveSource, 0, 0, srcW, Math.round(srcH * 0.5));
+        drawSharpFaceCanvas('.cube-face.right',  effectiveActiveSource, 0, 0, srcW, Math.round(srcH * 0.5));
         return;
       }
 
       if (!state.cubeMultiFace || currentItem.category !== 'block') {
-        dom.rightPreviewLabel.textContent = '3D-Vorschau';
+        dom.previewStatusLabel.textContent = '3D-Block' + srcSuffix;
         for (const sel of ['.cube-face.front', '.cube-face.back', '.cube-face.right', '.cube-face.left', '.cube-face.top', '.cube-face.bottom']) {
-          drawSharpFaceCanvas(sel, effectiveActiveSource, 0, 0, w, h);
+          drawSharpFaceCanvas(sel, effectiveActiveSource, 0, 0, srcW, srcH);
         }
         return;
       }
@@ -3171,7 +3368,7 @@
         leftImg = effectiveActiveSource;
       }
 
-      dom.rightPreviewLabel.textContent = '3D Mehrseiten-Block';
+      dom.previewStatusLabel.textContent = '3D Mehrseiten-Block' + srcSuffix;
       drawSharpFaceCanvas('.cube-face.top', topImg);
       drawSharpFaceCanvas('.cube-face.bottom', bottomImg);
       drawSharpFaceCanvas('.cube-face.front', frontImg);
@@ -3363,18 +3560,23 @@
     }
 
     async function ensureTexture116Decoded(texObj) {
+      if (!texObj) return texObj;
       if (texObj.pixels && texObj.palette && texObj.dataUrl) return texObj;
-      if (texObj.rawEntry && !texObj.dataUrl) {
-        const bytes = await ZipEngine.extractEntryBytes(texObj.rawEntry);
-        texObj.dataUrl = bytesToDataUrlPng(bytes);
-      }
-      if (texObj.dataUrl && (!texObj.pixels || !texObj.palette)) {
-        const dims = texObj.rawEntry ? await ZipEngine.getPngDimensions(texObj.rawEntry) : { w: 8, h: 8 };
-        const decoded = await decodeImagePixelsAndPalette(texObj.dataUrl, dims.w, dims.h);
-        texObj.pixels = decoded.pixels;
-        texObj.palette = decoded.palette;
-        texObj.w = decoded.w;
-        texObj.h = decoded.h;
+      try {
+        if (texObj.rawEntry && !texObj.dataUrl) {
+          const bytes = await ZipEngine.extractEntryBytes(texObj.rawEntry);
+          texObj.dataUrl = bytesToDataUrlPng(bytes);
+        }
+        if (texObj.dataUrl && (!texObj.pixels || !texObj.palette)) {
+          const dims = texObj.rawEntry ? await ZipEngine.getPngDimensions(texObj.rawEntry) : { w: 8, h: 8 };
+          const decoded = await decodeImagePixelsAndPalette(texObj.dataUrl, dims.w, dims.h);
+          texObj.pixels = decoded.pixels;
+          texObj.palette = decoded.palette;
+          texObj.w = decoded.w;
+          texObj.h = decoded.h;
+        }
+      } catch (e) {
+        console.warn('1.16 decode skipped:', texObj.relPath, e);
       }
       return texObj;
     }
@@ -3542,12 +3744,14 @@
       }
     }
 
+    let inspRenderSeq = 0;
     async function renderInspirationBar() {
+      const seq = ++inspRenderSeq;
       const currentItem = state.worklist[state.currentWorkIndex];
       const matches = getInspirationMatches(currentItem, state.inspSearchQuery);
-      dom.inspirationList.innerHTML = '';
 
       if (matches.length === 0) {
+        dom.inspirationList.innerHTML = '';
         const empty = document.createElement('span');
         empty.style.color = 'var(--text-muted)';
         empty.style.fontSize = '11px';
@@ -3556,7 +3760,10 @@
         return;
       }
 
-      await Promise.all(matches.map(m => ensureTexture116Decoded(m)));
+      await Promise.allSettled(matches.map(m => ensureTexture116Decoded(m)));
+      if (seq !== inspRenderSeq) return; // Discard stale async render
+
+      dom.inspirationList.innerHTML = '';
 
       if (!state.selectedInspirationPath || !matches.some(m => m.relPath === state.selectedInspirationPath)) {
         state.selectedInspirationPath = matches[0].relPath;
@@ -3901,7 +4108,7 @@
         if (tab === 'entity' && w.category !== 'entity') return;
         if (tab === 'other' && ['block', 'item', 'entity'].includes(w.category)) return;
         if (typeFilter !== 'all' && w.typeGroup.id !== typeFilter) return;
-        if (q && !w.relPath.toLowerCase().includes(q) && !w.typeGroup.label.toLowerCase().includes(q)) return;
+        if (q && tolerantMatchScore(q, `${w.relPath} ${w.typeGroup.label}`) === 0) return;
         matching.push({ w, idx });
       });
 
@@ -4528,7 +4735,35 @@
 
     dom.btnToggleMultiFaceCube.addEventListener('click', () => {
       state.cubeMultiFace = !state.cubeMultiFace;
-      dom.btnToggleMultiFaceCube.textContent = state.cubeMultiFace ? '3D: Mehrseitig' : '3D: 1-Textur';
+      dom.btnToggleMultiFaceCube.textContent = state.cubeMultiFace ? 'Mehrseitig' : '1-Textur';
+      updateCrisp3DCubeAndTilePreview();
+    });
+
+    dom.btnPreviewMode3D.addEventListener('click', () => {
+      state.previewMode = '3d';
+      dom.btnPreviewMode3D.classList.add('active');
+      dom.btnPreviewMode2D.classList.remove('active');
+      updateCrisp3DCubeAndTilePreview();
+    });
+
+    dom.btnPreviewMode2D.addEventListener('click', () => {
+      state.previewMode = '2d';
+      dom.btnPreviewMode2D.classList.add('active');
+      dom.btnPreviewMode3D.classList.remove('active');
+      updateCrisp3DCubeAndTilePreview();
+    });
+
+    dom.btnPreviewSrcAuto.addEventListener('click', () => {
+      state.previewSource = 'auto';
+      dom.btnPreviewSrcAuto.classList.add('active');
+      dom.btnPreviewSrcVanilla.classList.remove('active');
+      updateCrisp3DCubeAndTilePreview();
+    });
+
+    dom.btnPreviewSrcVanilla.addEventListener('click', () => {
+      state.previewSource = 'vanilla';
+      dom.btnPreviewSrcVanilla.classList.add('active');
+      dom.btnPreviewSrcAuto.classList.remove('active');
       updateCrisp3DCubeAndTilePreview();
     });
 
@@ -4546,13 +4781,78 @@
         loadWorkItem(state.filteredIndices[0]);
       }
     });
+
+    function renderSearchDropdown(queryText) {
+      const q = (queryText || '').trim();
+      if (!q) {
+        dom.searchDropdown.classList.add('hidden');
+        dom.searchDropdown.innerHTML = '';
+        return;
+      }
+
+      const hits = [];
+      state.worklist.forEach((w, idx) => {
+        const score = tolerantMatchScore(q, `${w.relPath} ${w.typeGroup.label} ${w.category}`);
+        if (score > 0) hits.push({ w, idx, score });
+      });
+      hits.sort((a, b) => b.score - a.score || a.w.relPath.localeCompare(b.w.relPath));
+
+      dom.searchDropdown.innerHTML = '';
+      if (hits.length === 0) {
+        dom.searchDropdown.innerHTML = '<div style="padding:10px; font-size:12px; color:var(--text-muted);">Keine passenden Texturen gefunden.</div>';
+        dom.searchDropdown.classList.remove('hidden');
+        return;
+      }
+
+      const topHits = hits.slice(0, 40);
+      for (const { w, idx } of topHits) {
+        const btn = document.createElement('button');
+        btn.className = 'search-hit' + (idx === state.currentWorkIndex ? ' active' : '');
+        const imgEl = document.createElement('img');
+        imgEl.className = 'insp-thumb pixelated checkerboard';
+        imgEl.alt = '';
+        if (w.vanillaDataUrl) imgEl.src = w.vanillaDataUrl;
+        else ensureWorkItemVanillaUrl(w).then(url => { if (url) imgEl.src = url; });
+
+        const mid = document.createElement('div');
+        mid.style.cssText = 'flex:1; min-width:0; display:flex; flex-direction:column;';
+        mid.innerHTML = `<span class="mono" style="font-size:11px; overflow:hidden; text-overflow:ellipsis; white-space:nowrap;">${w.relPath}</span>
+                         <span class="mono" style="font-size:10px; color:var(--text-muted);">${w.typeGroup.label} · ${w.targetW || 8}×${w.targetH || 8}</span>`;
+
+        const pill = document.createElement('span');
+        pill.className = 'status-badge mono ' + (w.status === 'done' ? 'done' : w.status === 'skipped' ? 'skipped' : '');
+        pill.textContent = w.category;
+
+        const leftWrap = document.createElement('div');
+        leftWrap.style.cssText = 'display:flex; align-items:center; gap:8px; min-width:0; flex:1;';
+        leftWrap.appendChild(imgEl);
+        leftWrap.appendChild(mid);
+        btn.appendChild(leftWrap);
+        btn.appendChild(pill);
+
+        btn.addEventListener('click', () => {
+          loadWorkItem(idx);
+          dom.searchDropdown.classList.add('hidden');
+        });
+        dom.searchDropdown.appendChild(btn);
+      }
+      dom.searchDropdown.classList.remove('hidden');
+    }
+
     dom.searchInput.addEventListener('input', (e) => {
       state.searchQuery = e.target.value;
       recomputeFilteredWorklist();
-      if (state.filteredIndices.length > 0 && !state.filteredIndices.includes(state.currentWorkIndex)) {
-        loadWorkItem(state.filteredIndices[0]);
+      renderSearchDropdown(state.searchQuery);
+    });
+    dom.searchInput.addEventListener('focus', () => {
+      if (dom.searchInput.value.trim()) renderSearchDropdown(dom.searchInput.value);
+    });
+    document.addEventListener('pointerdown', (e) => {
+      if (!e.target.closest('.search-wrap')) {
+        dom.searchDropdown.classList.add('hidden');
       }
     });
+
     dom.inspSearchInput.addEventListener('input', (e) => {
       state.inspSearchQuery = e.target.value;
       renderInspirationBar();
