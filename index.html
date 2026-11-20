@@ -774,6 +774,7 @@
       width: 100%;
       display: flex;
       align-items: center;
+      flex-shrink: 0;
       gap: 6px;
       padding: 6px 10px;
       margin-top: 6px;
@@ -842,16 +843,16 @@
       display: flex;
       align-items: center;
       justify-content: center;
-      padding: 8px;
+      padding: 6px;
       min-height: 0;
+      overflow: hidden;
     }
 
     .canvas-frame {
       position: relative;
-      width: min(54vh, 50vw, 430px);
-      height: min(54vh, 50vw, 430px);
-      min-width: 220px;
-      min-height: 220px;
+      width: 260px;
+      height: 260px;
+      flex-shrink: 0;
       border-radius: 8px;
       border: 1px solid var(--border-strong);
       box-shadow: 0 18px 46px rgba(0, 0, 0, 0.55);
@@ -1298,12 +1299,69 @@
       transform: translateX(-50%) translateY(0);
     }
 
+    .cube-viewport.paint-mode {
+      border: 1.5px solid var(--accent);
+      box-shadow: 0 0 0 2px var(--accent-soft);
+      cursor: crosshair;
+      touch-action: none;
+    }
+
+    .cube-viewport.paint-mode .cube-face {
+      cursor: crosshair;
+    }
+
+    .inspo-3d-btn {
+      min-height: 24px;
+      padding: 0 6px;
+      border-radius: 4px;
+      background: var(--accent-soft);
+      border: 1px solid var(--accent-border);
+      color: var(--accent);
+      font-size: 10px;
+      font-weight: 700;
+      cursor: pointer;
+      flex-shrink: 0;
+      display: inline-flex;
+      align-items: center;
+      gap: 3px;
+    }
+
+    .inspo-3d-btn:hover, .inspo-3d-btn.active {
+      background: var(--accent);
+      color: #fff;
+    }
+
     @media (max-width: 1024px) {
       .workspace { grid-template-columns: 238px 1fr 264px; }
     }
     @media (max-width: 820px) {
       .workspace { grid-template-columns: 205px 1fr 232px; }
       .hide-compact { display: none; }
+    }
+    @media (max-width: 760px), (pointer: coarse) and (orientation: portrait) and (max-width: 900px) {
+      .workspace {
+        grid-template-columns: 1fr;
+        grid-template-rows: auto minmax(300px, 1fr) auto;
+        overflow-y: auto;
+      }
+      .left-panel, .right-panel {
+        border-right: none;
+        border-left: none;
+        border-bottom: 1px solid var(--border-hairline);
+        max-height: 290px;
+      }
+      .center-stage {
+        min-height: 340px;
+      }
+    }
+    @media (pointer: coarse) {
+      .btn, .tool-btn, .seg-btn, .face-chip, .inspo-chip {
+        min-height: 38px;
+      }
+      .inspo-3d-btn {
+        min-height: 28px;
+        padding: 0 8px;
+      }
     }
   </style>
 </head>
@@ -1466,7 +1524,8 @@
 
           <div class="ref-footer" style="flex-wrap:wrap; gap:4px;">
             <span id="previewStatusLabel">3D-Modell</span>
-            <div style="display:flex; gap:4px; align-items:center;">
+            <div style="display:flex; gap:4px; align-items:center; flex-wrap:wrap;">
+              <button class="btn" id="btnToggleCubePaint" style="min-height:26px; padding:0 8px; font-size:10px; font-weight:600;" title="Zwischen 3D-Drehen und direktem Pixeln auf dem 3D-Modell umschalten">✋ Drehen</button>
               <button class="btn" id="btnSignPlacement" style="display:none; min-height:24px; padding:0 7px; font-size:10px;" title="Platzierung wechseln (Decke, Wand, Boden)">Pos: Wand/Decke</button>
               <button class="btn btn-ghost" id="btnToggleMultiFaceCube" style="min-height:22px; padding:0 5px; font-size:10px;">Mehrseitig</button>
               <button class="btn btn-ghost" id="btnResetCube" style="min-height:22px; padding:0 5px; font-size:10px;">Spin</button>
@@ -1510,7 +1569,7 @@
           <div class="block-faces-bar hidden" id="blockFacesBar"></div>
         </div>
 
-        <div class="canvas-arena">
+        <div class="canvas-arena" id="canvasArena">
           <div class="canvas-frame checkerboard" id="canvasFrame">
             <canvas id="drawCanvas" width="8" height="8" class="pixelated"></canvas>
             <canvas id="vanillaOverlayCanvas" width="8" height="8" class="pixelated hidden"></canvas>
@@ -2297,6 +2356,7 @@
       cubeRotY: 36,
       cubeAutoSpin: false,
       cubeMultiFace: true,
+      cubePaintMode: false,
       previewMode: '3d', // '3d' | '2d'
       previewSource: 'auto', // 'auto' | 'vanilla' | '116'
       signPlacement: 'wall', // Hanging Sign: 'wall' | 'ceiling-v' | 'ceiling-p'; Standing Sign: 'ground' | 'wall'
@@ -2349,6 +2409,7 @@
       sceneCube: document.getElementById('sceneCube'),
       btnResetCube: document.getElementById('btnResetCube'),
       btnToggleMultiFaceCube: document.getElementById('btnToggleMultiFaceCube'),
+      btnToggleCubePaint: document.getElementById('btnToggleCubePaint'),
       btnDownloadSinglePng: document.getElementById('btnDownloadSinglePng'),
       btnDownloadSingleLabel: document.getElementById('btnDownloadSingleLabel'),
       btnExportBackupJson: document.getElementById('btnExportBackupJson'),
@@ -2360,6 +2421,7 @@
       btnZoomCurrentCanvas: document.getElementById('btnZoomCurrentCanvas'),
       currentStatusBadge: document.getElementById('currentStatusBadge'),
       blockFacesBar: document.getElementById('blockFacesBar'),
+      canvasArena: document.getElementById('canvasArena'),
       canvasFrame: document.getElementById('canvasFrame'),
       drawCanvas: document.getElementById('drawCanvas'),
       vanillaOverlayCanvas: document.getElementById('vanillaOverlayCanvas'),
@@ -3180,6 +3242,7 @@
       };
       dom.pastePlacementBar.classList.remove('hidden');
       updatePasteBarUI();
+      fitCanvasFrameToArena();
       drawGridAndSelectionOverlay(-1, -1);
       showToast('Tippe/Ziehe auf dem Canvas, um die Zielposition zu wählen');
     }
@@ -3213,6 +3276,7 @@
       }
       state.pendingPaste = null;
       dom.pastePlacementBar.classList.add('hidden');
+      fitCanvasFrameToArena();
       syncCanvasAndSave();
       showToast(skippedCount > 0
         ? `${pastedCount} px eingefügt (${skippedCount} bestehende geschützt)`
@@ -3222,6 +3286,7 @@
     function cancelPendingPaste() {
       state.pendingPaste = null;
       dom.pastePlacementBar.classList.add('hidden');
+      fitCanvasFrameToArena();
       drawGridAndSelectionOverlay(-1, -1);
     }
 
@@ -3275,9 +3340,18 @@
       const ctx = faceCanvas.getContext('2d');
       ctx.clearRect(0, 0, fw, fh);
       ctx.imageSmoothingEnabled = false;
-      const w = sw || sourceCanvasOrImg.width || sourceCanvasOrImg.naturalWidth || 8;
-      const h = sh || sourceCanvasOrImg.height || sourceCanvasOrImg.naturalHeight || 8;
+      const srcW = sourceCanvasOrImg.width || sourceCanvasOrImg.naturalWidth || 8;
+      const srcH = sourceCanvasOrImg.height || sourceCanvasOrImg.naturalHeight || 8;
+      const w = sw || srcW;
+      const h = sh || srcH;
       ctx.drawImage(sourceCanvasOrImg, sx, sy, w, h, 0, 0, fw, fh);
+      faceCanvas.dataset.uvSx = String(sx);
+      faceCanvas.dataset.uvSy = String(sy);
+      faceCanvas.dataset.uvSw = String(w);
+      faceCanvas.dataset.uvSh = String(h);
+      faceCanvas.dataset.uvSrcW = String(srcW);
+      faceCanvas.dataset.uvSrcH = String(srcH);
+      faceCanvas.dataset.uvEditable = (sourceCanvasOrImg === dom.drawCanvas || sourceCanvasOrImg === dom.refCanvas) ? '1' : '0';
     }
 
     const imageCache = new Map();
@@ -3901,6 +3975,7 @@
 
       renderAllPreviews();
       await renderVariantAndFacesBar();
+      fitCanvasFrameToArena();
       await renderInspirationBar();
       persistStateToIndexedDB();
     }
@@ -3972,6 +4047,45 @@
       }
     }
 
+    function drawIsoCubeThumb(canvas, img) {
+      if (!canvas || !img) return;
+      const ctx = canvas.getContext('2d');
+      const w = canvas.width, h = canvas.height;
+      ctx.clearRect(0, 0, w, h);
+      ctx.imageSmoothingEnabled = false;
+      const cx = w / 2, topY = 2, midY = h * 0.30, botY = h - 2;
+      const rx = w * 0.44;
+      const drawFace = (pts, shade) => {
+        ctx.save();
+        ctx.beginPath();
+        ctx.moveTo(pts[0][0], pts[0][1]);
+        ctx.lineTo(pts[1][0], pts[1][1]);
+        ctx.lineTo(pts[2][0], pts[2][1]);
+        ctx.lineTo(pts[3][0], pts[3][1]);
+        ctx.closePath();
+        ctx.clip();
+        // Affine transform from unit square [0..iw, 0..ih] to quad (p0 -> p1, p0 -> p3)
+        const iw = img.naturalWidth || img.width || 8;
+        const ih = img.naturalHeight || img.height || 8;
+        const dx1 = (pts[1][0] - pts[0][0]) / iw, dy1 = (pts[1][1] - pts[0][1]) / iw;
+        const dx2 = (pts[3][0] - pts[0][0]) / ih, dy2 = (pts[3][1] - pts[0][1]) / ih;
+        ctx.transform(dx1, dy1, dx2, dy2, pts[0][0], pts[0][1]);
+        ctx.drawImage(img, 0, 0);
+        if (shade > 0) {
+          ctx.fillStyle = `rgba(0,0,0,${shade})`;
+          ctx.fillRect(0, 0, iw, ih);
+        }
+        ctx.restore();
+      };
+      const topH = midY - topY;
+      // Top face
+      drawFace([[cx, topY], [cx + rx, midY], [cx, midY + topH], [cx - rx, midY]], 0);
+      // Left face
+      drawFace([[cx - rx, midY], [cx, midY + topH], [cx, botY], [cx - rx, botY - topH]], 0.14);
+      // Right face
+      drawFace([[cx, midY + topH], [cx + rx, midY], [cx + rx, botY - topH], [cx, botY]], 0.28);
+    }
+
     let inspRenderSeq = 0;
     async function renderInspirationBar() {
       const seq = ++inspRenderSeq;
@@ -4003,22 +4117,46 @@
 
       for (const m of matches) {
         const el = document.createElement('div');
-        el.className = 'insp-item' + (m.relPath === state.selectedInspirationPath ? ' active' : '');
+        const isSelected = m.relPath === state.selectedInspirationPath;
+        el.className = 'insp-item' + (isSelected ? ' active' : '');
         const shortName = m.relPath.split('/').pop().replace(/\.png$/i, '');
         const palLen = m.palette ? m.palette.length : 0;
+        const is3dCapable = m.category === 'block' || m.category === 'entity';
+        const is3dActive = isSelected && state.previewMode === '3d' && state.previewSource === '116';
         el.innerHTML = `
-          <img class="insp-thumb pixelated checkerboard" src="${m.dataUrl || ''}" alt="${shortName}" />
+          ${is3dCapable
+            ? `<canvas class="insp-thumb pixelated" width="32" height="32" title="3D-Form (${shortName})"></canvas>`
+            : `<img class="insp-thumb pixelated checkerboard" src="${m.dataUrl || ''}" alt="${shortName}" />`}
           <div class="insp-meta">
             <span class="insp-name mono">${shortName}</span>
             <span class="insp-sub mono">${m.category} · ${m.w || 8}×${m.h || 8} · ${palLen}F</span>
           </div>
+          <button class="inspo-3d-btn${is3dActive ? ' active' : ''}" title="3D-Form links in der Vorschau drehen">🧊 3D</button>
           <button class="insp-zoom-btn" title="1-Klick Zoom & Pixel kopieren">🔍</button>
         `;
+        if (is3dCapable && m.dataUrl) {
+          const thumbCanvas = el.querySelector('canvas.insp-thumb');
+          getCachedImage(m.dataUrl).then(img => { if (img) drawIsoCubeThumb(thumbCanvas, img); });
+        }
         el.addEventListener('click', (e) => {
           state.selectedInspirationPath = m.relPath;
           if (m.palette && m.palette.length > 0) {
             state.extractedPalette = m.palette.slice(0, 16);
             setActiveColor(m.palette[0], true);
+          }
+          if (e.target.closest('.inspo-3d-btn')) {
+            state.previewMode = '3d';
+            state.previewSource = '116';
+            dom.btnPreviewMode3D.classList.add('active');
+            dom.btnPreviewMode2D.classList.remove('active');
+            dom.btnPreviewSrcAuto.classList.remove('active');
+            dom.btnPreviewSrcVanilla.classList.remove('active');
+            dom.btnPreviewSrc116.classList.add('active');
+            renderInspirationBar();
+            renderPaletteGrids();
+            updateCrisp3DCubeAndTilePreview();
+            showToast(`3D-Vorschau auf 1.16 "${shortName}" umgeschaltet`);
+            return;
           }
           renderInspirationBar();
           renderPaletteGrids();
@@ -4568,26 +4706,140 @@
     dom.refStage.addEventListener('pointermove', (e) => { if (isPickingRef) pickColorFromRefEvent(e); });
     dom.refStage.addEventListener('pointerup', () => { isPickingRef = false; });
 
-    // 3D Cube Drag
+    // Responsive Canvas Frame Sizing (prevents overlap with pastePlacementBar / stage-footer on iPad)
+    function fitCanvasFrameToArena() {
+      if (!dom.canvasArena || !dom.canvasFrame) return;
+      const availW = Math.max(80, dom.canvasArena.clientWidth - 14);
+      const availH = Math.max(80, dom.canvasArena.clientHeight - 14);
+      const aspect = (state.canvasW || 8) / (state.canvasH || 8);
+      let frameW = availW;
+      let frameH = Math.round(frameW / aspect);
+      if (frameH > availH) {
+        frameH = availH;
+        frameW = Math.round(frameH * aspect);
+      }
+      frameW = Math.max(80, Math.min(460, frameW));
+      frameH = Math.max(80, Math.min(460, frameH));
+      dom.canvasFrame.style.width = frameW + 'px';
+      dom.canvasFrame.style.height = frameH + 'px';
+    }
+    if (typeof ResizeObserver !== 'undefined' && dom.canvasArena) {
+      new ResizeObserver(() => fitCanvasFrameToArena()).observe(dom.canvasArena);
+    }
+    window.addEventListener('resize', fitCanvasFrameToArena);
+    requestAnimationFrame(fitCanvasFrameToArena);
+
+    // 3D Cube Drag & Direct 3D Painting
     let isDraggingCube = false, cubeStartX = 0, cubeStartY = 0;
+    let isPaintingCube = false, lastCubePx = -1, lastCubePy = -1;
     function updateCubeTransform() {
       dom.sceneCube.style.transform = `rotateX(${state.cubeRotX}deg) rotateY(${state.cubeRotY}deg)`;
     }
+    function setCubePaintMode(enabled) {
+      state.cubePaintMode = !!enabled;
+      if (state.cubePaintMode) state.cubeAutoSpin = false;
+      dom.btnToggleCubePaint.textContent = state.cubePaintMode ? '✏️ 3D-Malen' : '✋ Drehen';
+      dom.btnToggleCubePaint.classList.toggle('btn-accent', state.cubePaintMode);
+      dom.cubeViewport.classList.toggle('paint-mode', state.cubePaintMode);
+    }
+    dom.btnToggleCubePaint.addEventListener('click', () => {
+      setCubePaintMode(!state.cubePaintMode);
+      showToast(state.cubePaintMode
+        ? '3D-Malen aktiv: Direkt auf dem 3D-Modell pixeln!'
+        : '3D-Drehen aktiv: Modell mit Finger oder Pencil drehen');
+    });
+
+    function getCubeFacePixelFromEvent(e) {
+      const face = e.target && e.target.closest ? e.target.closest('.cube-face') : null;
+      if (!face || face.dataset.uvEditable !== '1') return null;
+      const cw = face.clientWidth || 128;
+      const ch = face.clientHeight || 128;
+      const u = Math.max(0, Math.min(0.9999, e.offsetX / cw));
+      const v = Math.max(0, Math.min(0.9999, e.offsetY / ch));
+      const sx = Number(face.dataset.uvSx || 0);
+      const sy = Number(face.dataset.uvSy || 0);
+      const sw = Number(face.dataset.uvSw || state.canvasW);
+      const sh = Number(face.dataset.uvSh || state.canvasH);
+      const srcW = Number(face.dataset.uvSrcW || state.canvasW);
+      const srcH = Number(face.dataset.uvSrcH || state.canvasH);
+      const srcPxX = sx + u * sw;
+      const srcPxY = sy + v * sh;
+      const px = Math.max(0, Math.min(state.canvasW - 1, Math.floor((srcPxX / srcW) * state.canvasW)));
+      const py = Math.max(0, Math.min(state.canvasH - 1, Math.floor((srcPxY / srcH) * state.canvasH)));
+      return { px, py };
+    }
+
     dom.cubeViewport.addEventListener('pointerdown', (e) => {
-      e.preventDefault(); isDraggingCube = true; state.cubeAutoSpin = false;
+      e.preventDefault();
+      if (state.cubePaintMode) {
+        const hit = getCubeFacePixelFromEvent(e);
+        if (!hit) {
+          showToast('Diese Seite gehört zu einer anderen Textur (oder 3D-Vorschau auf "Meine" stellen)');
+          return;
+        }
+        if (state.previewSource !== 'auto') {
+          state.previewSource = 'auto';
+          dom.btnPreviewSrcAuto.classList.add('active');
+          dom.btnPreviewSrcVanilla.classList.remove('active');
+          dom.btnPreviewSrc116.classList.remove('active');
+        }
+        if (state.activeTool !== 'eyedropper' && state.activeTool !== 'select') {
+          preStrokeSnapshot = new Uint8ClampedArray(state.canvasBuffer);
+          pushUndoSnapshot();
+        }
+        isPaintingCube = true;
+        lastCubePx = hit.px;
+        lastCubePy = hit.py;
+        dom.coordText.textContent = `3D X: ${hit.px}  Y: ${hit.py}`;
+        const prevTool = state.activeTool;
+        if (state.activeTool === 'select') state.activeTool = 'pencil';
+        applyToolAtPixel(hit.px, hit.py, true);
+        state.activeTool = prevTool;
+        syncCanvasAndSave();
+        return;
+      }
+      isDraggingCube = true; state.cubeAutoSpin = false;
       cubeStartX = e.clientX; cubeStartY = e.clientY;
       dom.cubeViewport.setPointerCapture(e.pointerId);
     });
     dom.cubeViewport.addEventListener('pointermove', (e) => {
+      if (state.cubePaintMode && isPaintingCube) {
+        e.preventDefault();
+        const hit = getCubeFacePixelFromEvent(e);
+        if (!hit) return;
+        dom.coordText.textContent = `3D X: ${hit.px}  Y: ${hit.py}`;
+        if (hit.px !== lastCubePx || hit.py !== lastCubePy) {
+          const prevTool = state.activeTool;
+          if (state.activeTool === 'select') state.activeTool = 'pencil';
+          if (state.activeTool === 'pencil' || state.activeTool === 'eraser') {
+            drawLineBresenham(lastCubePx, lastCubePy, hit.px, hit.py);
+          } else {
+            applyToolAtPixel(hit.px, hit.py, false);
+          }
+          state.activeTool = prevTool;
+          lastCubePx = hit.px;
+          lastCubePy = hit.py;
+          syncCanvasAndSave();
+        }
+        return;
+      }
       if (!isDraggingCube) return;
       state.cubeRotY += (e.clientX - cubeStartX) * 0.85;
       state.cubeRotX = Math.max(-75, Math.min(75, state.cubeRotX - (e.clientY - cubeStartY) * 0.85));
       cubeStartX = e.clientX; cubeStartY = e.clientY;
       updateCubeTransform();
     });
-    dom.cubeViewport.addEventListener('pointerup', () => { isDraggingCube = false; });
+    function endCubeInteraction() {
+      isDraggingCube = false;
+      isPaintingCube = false;
+      lastCubePx = -1;
+      lastCubePy = -1;
+    }
+    dom.cubeViewport.addEventListener('pointerup', endCubeInteraction);
+    dom.cubeViewport.addEventListener('pointercancel', endCubeInteraction);
+    window.addEventListener('pointerup', endCubeInteraction);
     (function animateCubeLoop() {
-      if (state.cubeAutoSpin && !isDraggingCube) {
+      if (state.cubeAutoSpin && !isDraggingCube && !state.cubePaintMode) {
         state.cubeRotY = (state.cubeRotY + 0.45) % 360;
         updateCubeTransform();
       }
